@@ -12,9 +12,7 @@ foot/      terminal
 fuzzel/    launcher
 lazygit/   git tui
 fastfetch/ system info
-btop/      resource monitor
 yay/       aur helper
-cava/      audio visualizer
 wal/       pywal colors
 avizo/     notifications
 pkg-lists/ package backups
