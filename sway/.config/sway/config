@@ -1,0 +1,13 @@
+# --- Variables ---
+set $mod Mod4
+set $left h
+set $down j
+set $up k
+set $right l
+set $term foot
+set $menu fuzzel
+
+# --- Includes ---
+include ~/.cache/wal/colors-sway
+include ~/.config/sway/config.d/*.conf
+include /etc/sway/config.d/*

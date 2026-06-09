@@ -1,0 +1,5 @@
+# This file contains fish universal variable definitions.
+# VERSION: 3.0
+SETUVAR --export AICOMMITS_NVIM_GEMINI_API_KEY:AIzaSyAQFFpugwj41zK4O3JAP0vgllCDoWfDwj8
+SETUVAR __fish_initialized:4300
+SETUVAR fish_user_paths:/home/shironxn/bin\x1e/home/shironxn/\x2elocal/bin\x1e/home/shironxn/\x2enpm\x2dglobal/bin
