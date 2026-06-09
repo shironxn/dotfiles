@@ -17,9 +17,7 @@ cp -r ~/.config/fuzzel/ fuzzel/.config/
 cp -r ~/.config/nvim/ nvim/.config/
 cp -r ~/.config/lazygit/ lazygit/.config/
 cp -r ~/.config/fastfetch/ fastfetch/.config/
-cp -r ~/.config/btop/ btop/.config/
 cp -r ~/.config/yay/ yay/.config/
-cp -r ~/.config/cava/ cava/.config/
 cp -r ~/.config/wal/ wal/.config/
 cp -r ~/.config/avizo/ avizo/.config/
 cp ~/.gitconfig gitconfig/.gitconfig
