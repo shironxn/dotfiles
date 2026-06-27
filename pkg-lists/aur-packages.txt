@@ -1,14 +1,6 @@
-antigravity-cli
-apg
-avizo
 brave-bin
-bruno-bin
-byobu
-ccze
-hollywood
-lunar-client
-pipes.sh
-speedometer
 spicetify-cli
 spotify
+thinkfan
 yay
+yay-debug

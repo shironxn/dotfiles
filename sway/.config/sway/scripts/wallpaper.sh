@@ -14,4 +14,11 @@ done | fuzzel -d -p "Wallpaper: ")
 wallpaper=$(echo "$files" | grep -F "/$selection" | head -1)
 [ -z "$wallpaper" ] && notify-send "Wallpaper" "Not found" && exit 1
 
-wal -i "$wallpaper" && swaymsg reload
+PYTHONPATH=/tmp/pywal-venv/lib/python3.14/site-packages wal --backend colorthief -i "$wallpaper" || exit 1
+
+# swayosd baru udah regenerate, restart biar kebaca
+killall swayosd-server 2>/dev/null || true
+swayosd-server --style ~/.config/swayosd/style.css &
+disown
+
+swaymsg reload

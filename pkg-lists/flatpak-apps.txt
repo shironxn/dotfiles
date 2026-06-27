@@ -1,9 +1,6 @@
-io.mrarm.mcpelauncher
 org.freedesktop.Platform.GL.default
 org.freedesktop.Platform.GL.default
 org.freedesktop.Platform.VAAPI.Intel
 org.freedesktop.Platform.codecs-extra
 org.gnome.Platform
-org.kde.KStyle.Adwaita
-org.kde.Platform
 org.vinegarhq.Sober

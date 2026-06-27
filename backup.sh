@@ -11,6 +11,7 @@ flatpak list --columns=application > pkg-lists/flatpak-apps.txt
 
 # Sync configs (using cp -r)
 cp -r ~/.config/sway/ sway/.config/
+cp -r ~/.config/swayosd/ swayosd/.config/
 cp -r ~/.config/fish/ fish/.config/
 cp -r ~/.config/foot/ foot/.config/
 cp -r ~/.config/fuzzel/ fuzzel/.config/
@@ -19,7 +20,6 @@ cp -r ~/.config/lazygit/ lazygit/.config/
 cp -r ~/.config/fastfetch/ fastfetch/.config/
 cp -r ~/.config/yay/ yay/.config/
 cp -r ~/.config/wal/ wal/.config/
-cp -r ~/.config/avizo/ avizo/.config/
 cp ~/.gitconfig gitconfig/.gitconfig
 
 # Git commit with Conventional Commits logic
