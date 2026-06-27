@@ -15,7 +15,8 @@ cp -r ~/.config/swayosd/ swayosd/.config/
 cp -r ~/.config/fish/ fish/.config/
 cp -r ~/.config/foot/ foot/.config/
 cp -r ~/.config/fuzzel/ fuzzel/.config/
-cp -r ~/.config/nvim/ nvim/.config/
+cp -r ~/.config/nvim/ nvim/.config/ 2>/dev/null
+rm -rf nvim/.config/nvim/.git  # exclude embedded LazyVim repo
 cp -r ~/.config/lazygit/ lazygit/.config/
 cp -r ~/.config/fastfetch/ fastfetch/.config/
 cp -r ~/.config/yay/ yay/.config/

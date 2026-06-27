@@ -1,0 +1,10 @@
+# Local secrets (API keys, tokens)
+fish/.config/fish/conf.d/secrets.fish
+
+# Embedded nvim repo (LazyVim) — clone separately
+nvim/.config/nvim
+
+# Editor temp files
+*.swp
+*.swo
+*~
