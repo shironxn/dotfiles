@@ -36,7 +36,7 @@ if [[ -n $(git status -s) ]]; then
     fi
 
     git commit -m "$MSG"
-    git push origin master
+    git push origin main
 else
     echo "Nothing to commit."
 fi
