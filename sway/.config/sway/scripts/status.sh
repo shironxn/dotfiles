@@ -10,7 +10,11 @@ while true; do
     *)        charge_icon="󰁿" ;;
   esac
 
-  volume=$(pamixer --get-volume-human 2>/dev/null || echo "MUTED")
+  if pactl get-sink-mute @DEFAULT_SINK@ | grep -q "Mute: yes"; then
+    volume="MUTED"
+  else
+    volume=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\d+%' | head -n 1)
+  fi
   wifi=$(nmcli -t -f active,ssid dev wifi | awk -F: '$1=="yes"{print $2; exit}')
   [ -z "$wifi" ] && wifi="No WiFi"
   uptime_str=$(uptime -p | sed 's/up //')
