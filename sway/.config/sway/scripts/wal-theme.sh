@@ -58,3 +58,5 @@ gsettings set org.gnome.desktop.interface gtk-theme "adw-gtk3" 2>/dev/null || tr
 gsettings set org.gnome.desktop.interface font-name "JetBrainsMono Nerd Font 10" 2>/dev/null || true
 gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" 2>/dev/null || true
 gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark" 2>/dev/null || true
+gsettings set org.gnome.desktop.interface cursor-theme "Doro" 2>/dev/null || true
+gsettings set org.gnome.desktop.interface cursor-size 32 2>/dev/null || true

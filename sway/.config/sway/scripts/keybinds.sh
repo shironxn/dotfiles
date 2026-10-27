@@ -25,6 +25,7 @@ function label(cmd) {
   if (cmd ~ /osd.sh kbd down/)            return "lampu keyboard −"
   if (cmd ~ /\$term/)                     return "buka terminal"
   if (cmd ~ /\$menu/)                     return "app launcher"
+  if (cmd ~ /window-switcher/)            return "pindah window (switcher)"
   if (cmd ~ /kill/)                       return "tutup window"
   if (cmd ~ /reload/)                     return "reload config"
   if (cmd ~ /swaylock/)                   return "lock screen"

@@ -1,0 +1,16 @@
+#!/bin/sh
+# Window switcher using Sway tree and Fuzzel
+windows=$(swaymsg -t get_tree | jq -r '
+  .. | objects | select(.type? == "workspace") as $ws | $ws | .. | objects | select(.name? and .pid?) |
+  "[\($ws.name)] \(.app_id // .window_properties.class // "app"): \(.name)\t\(.id)"
+')
+
+[ -z "$windows" ] && exit 0
+
+selected=$(echo "$windows" | cut -f1 | pick-fuzzel " switch to " -w 60 -l 12)
+[ -z "$selected" ] && exit 0
+
+con_id=$(echo "$windows" | awk -F'\t' -v s="$selected" '$1 == s {print $2; exit}')
+if [ -n "$con_id" ]; then
+  swaymsg "[con_id=$con_id] focus"
+fi

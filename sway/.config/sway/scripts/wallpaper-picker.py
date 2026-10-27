@@ -25,6 +25,9 @@ gi.require_version("Gdk", "3.0")
 gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import Gdk, GdkPixbuf, GLib, Gtk, Pango  # noqa: E402
 
+GLib.set_prgname("wallpaper-picker")
+GLib.set_application_name("Wallpaper Picker")
+
 CACHE_DIR = os.path.join(GLib.get_user_cache_dir(), "wallpaper-picker")
 THUMB_SIZE = 96
 PREVIEW_W, PREVIEW_H = 720, 405
@@ -190,6 +193,8 @@ class Picker:
         self.selected = None
 
         self.window = Gtk.Window(title="Wallpaper")
+        self.window.set_position(Gtk.WindowPosition.CENTER)
+        self.window.set_type_hint(Gdk.WindowTypeHint.DIALOG)
         self.window.get_style_context().add_class("picker")
         apply_wal_theme()
         want_w, want_h = self.fit_to_monitor()

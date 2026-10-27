@@ -15,8 +15,10 @@ alias ls="eza --icons=auto"
 alias ll="eza -lah --icons=auto"
 alias cat="bat"
 
-# Fastfetch (system info on terminal open)
-fastfetch
+# Fastfetch (system info on interactive terminal open)
+if status is-interactive
+    fastfetch
+end
 
 # Default applications
 set -gx EDITOR nvim

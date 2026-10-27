@@ -18,6 +18,7 @@ A clean, minimal, lightweight Wayland desktop environment configured for high pr
 * **OSD:** [SwayOSD](https://github.com/ErikReider/SwayOSD) (volume, brightness, mic overlay)
 * **Font:** JetBrains Mono Nerd Font
 * **Icons:** Papirus-Dark
+* **Cursor:** [Doro](https://github.com/rredwiz/doro-linux-cursors) (animated)
 
 ---
 
@@ -97,6 +98,7 @@ cd ~/dotfiles
 |---|---|
 | `Super + Enter` | Open Terminal (`foot`) |
 | `Super + d` | App Launcher (`fuzzel`) |
+| `Super + Tab` | Window Switcher (`fuzzel`) |
 | `Super + Shift + q` | Close focused window |
 | `Super + Shift + s` or `Print` | Interactive Screenshot (`slurp` + `grim`) |
 | `Super + Shift + w` | Wallpaper Picker (GTK3 preview + Pywal) |
