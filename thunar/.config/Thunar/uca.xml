@@ -4,12 +4,51 @@
 	<icon>utilities-terminal</icon>
 	<name>Open Terminal Here</name>
 	<submenu></submenu>
-	<unique-id>1785320132709826-1</unique-id>
-	<command>exo-open --working-directory %f --launch TerminalEmulator</command>
-	<description>Example for a custom action</description>
+	<unique-id>1-open-terminal-here</unique-id>
+	<command>foot -D %f</command>
+	<description>Open Foot terminal in current directory</description>
 	<range></range>
 	<patterns>*</patterns>
 	<startup-notify/>
+	<directories/>
+</action>
+<action>
+	<icon>preferences-desktop-wallpaper</icon>
+	<name>Set as Wallpaper</name>
+	<submenu></submenu>
+	<unique-id>2-set-as-wallpaper</unique-id>
+	<command>/home/shironxn/.config/sway/scripts/wal-theme.sh -i %f</command>
+	<description>Set image as wallpaper and update Pywal theme</description>
+	<range></range>
+	<patterns>*.png;*.jpg;*.jpeg;*.webp;*.PNG;*.JPG;*.JPEG;*.WEBP</patterns>
+	<image-files/>
+</action>
+<action>
+	<icon>nvim</icon>
+	<name>Edit with Neovim</name>
+	<submenu></submenu>
+	<unique-id>3-edit-with-neovim</unique-id>
+	<command>foot -e nvim %f</command>
+	<description>Open file in Neovim</description>
+	<range></range>
+	<patterns>*</patterns>
+	<other-files/>
+	<text-files/>
+</action>
+<action>
+	<icon>edit-copy</icon>
+	<name>Copy File Path</name>
+	<submenu></submenu>
+	<unique-id>4-copy-file-path</unique-id>
+	<command>echo -n %f | wl-copy</command>
+	<description>Copy path to clipboard</description>
+	<range></range>
+	<patterns>*</patterns>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
 	<directories/>
 </action>
 </actions>
