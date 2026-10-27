@@ -26,10 +26,10 @@ fi
 # Exit early if no colors were generated
 [ ! -f ~/.cache/wal/colors ] && exit 0
 
-# Mako, Swaylock, GTK: symlink to pywal cache (replaces sed/cp/heredoc)
+# Mako, Swaylock, GTK: symlink to pywal cache
 [ -f ~/.cache/wal/colors-mako ] && ln -sf ~/.cache/wal/colors-mako ~/.config/mako/config
 [ -f ~/.cache/wal/colors-swaylock ] && ln -sf ~/.cache/wal/colors-swaylock ~/.config/swaylock/config
-# GTK: tidak di-wal lagi — adw-gtk3 + color-scheme (konsisten GTK3/4, lihat audit 06)
+[ -f ~/.cache/wal/colors-gtk.css ] && ln -sf ~/.cache/wal/colors-gtk.css ~/.config/gtk-3.0/gtk.css
 makoctl reload 2>/dev/null || true
 
 # SwayOSD: symlink to pywal cache + restart server
@@ -54,8 +54,8 @@ fi
 
 
 # GSettings sync
-gsettings set org.gnome.desktop.interface gtk-theme "adw-gtk3" 2>/dev/null || true
-gsettings set org.gnome.desktop.interface font-name "JetBrainsMono Nerd Font 10" 2>/dev/null || true
+gsettings set org.gnome.desktop.interface gtk-theme "adw-gtk3-dark" 2>/dev/null || true
+gsettings set org.gnome.desktop.interface font-name "Noto Sans 10" 2>/dev/null || true
 gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" 2>/dev/null || true
 gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark" 2>/dev/null || true
 gsettings set org.gnome.desktop.interface cursor-theme "Doro" 2>/dev/null || true

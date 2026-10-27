@@ -1,0 +1,11 @@
+/* Pywal Dynamic Theme for GTK 3 & Thunar */
+@define-color window_bg_color {background};
+@define-color view_bg_color {background};
+@define-color headerbar_bg_color {background};
+@define-color sidebar_bg_color {background};
+@define-color dialog_bg_color {background};
+@define-color popover_bg_color {background};
+@define-color theme_bg_color {background};
+@define-color theme_base_color {background};
+@define-color accent_bg_color {color4};
+@define-color accent_color {color4};
