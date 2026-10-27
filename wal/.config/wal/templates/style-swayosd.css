@@ -1,0 +1,54 @@
+window#osd, .osd-window {{
+    background-color: {background};
+    border: 1px solid {color4};
+    border-radius: 0px;
+    padding: 8px 16px;
+}}
+.osd-text {{
+    color: {foreground};
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 0.9em;
+    font-weight: bold;
+    min-width: 36px;
+}}
+.osd-icon {{
+    color: {color4};
+    font-size: 1.2em;
+    min-width: 24px;
+}}
+progressbar {{
+    min-width: 120px;
+    min-height: 10px;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+}}
+
+progressbar trough {{
+    background-color: {color8};
+    border: none;
+    outline: none;
+    box-shadow: none;
+    min-height: 10px;
+    padding: 0;
+    margin: 0;
+}}
+
+progressbar progress {{
+    background-color: {color4};
+    border: none;
+    outline: none;
+    box-shadow: none;
+    min-height: 10px;
+    padding: 0;
+    margin: 0;
+}}
+
+.osd-window * {{
+    border: none;
+    outline: none;
+    box-shadow: none;
+}}

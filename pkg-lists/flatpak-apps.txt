@@ -1,0 +1,7 @@
+org.freedesktop.Platform.GL.default
+org.freedesktop.Platform.GL.default
+org.freedesktop.Platform.VAAPI.Intel
+org.freedesktop.Platform.codecs-extra
+org.gnome.Platform
+org.gtk.Gtk3theme.adw-gtk3
+org.vinegarhq.Sober
