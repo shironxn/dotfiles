@@ -9,3 +9,8 @@
 @define-color theme_base_color {background};
 @define-color accent_bg_color {color4};
 @define-color accent_color {color4};
+
+/* Sharp corners — 0px radius for consistent minimal aesthetic */
+* {{
+    border-radius: 0px;
+}}
