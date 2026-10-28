@@ -3,4 +3,4 @@ Description=Notify when unit %i fails
 
 [Service]
 Type=oneshot
-ExecStart=%h/.local/bin/notify-failure.sh %i
+ExecStart=%h/.local/bin/notify-failure %i
