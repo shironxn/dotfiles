@@ -1,12 +1,13 @@
 # dotfiles
 
-Sway desktop configuration for a ThinkPad X280 with an external 1080p monitor:
-pywal colours, a minimal status bar, and no compositor-level animations.
-Managed with [GNU Stow](https://www.gnu.org/software/stow/) and themed with
-pywal16.
+Clean, minimalist Sway desktop configuration on Arch Linux: dynamic pywal
+theming, a lightweight status bar, 0px sharp corners, and a bloat-free Wayland
+environment. Managed with [GNU Stow](https://www.gnu.org/software/stow/) and
+themed with pywal16.
 
-Reusable as-is on another Arch install; the parts that are tied to this machine
-are listed under [What to change](#what-to-change).
+Hardware-specific settings (display outputs, workspace pinning, input quirks)
+are decoupled into an optional `host.conf`, making the core configuration
+portable across machines.
 
 ## Stack
 
@@ -32,34 +33,36 @@ are listed under [What to change](#what-to-change).
 ```
 bin/                    scripts installed to ~/.local/bin
   menu-launcher         fuzzel launcher with flatpak data dirs
+  notify-failure        desktop alert for failed systemd user units
   pick-fuzzel           shared dmenu wrapper for every picker
   sway-output-toggle    move focus or a window to the other display
-  window-switcher       fuzzel window list
-btop/                   system monitor
-fastfetch/              login info and logo
+  wakatime-cli-update   keep wakatime-cli updated to latest release
+  window-switcher       fuzzel window switcher
+btop/                   system monitor (uses terminal palette)
+fastfetch/              login system info and ascii art
 fish/                   shell config, aliases, flatpak dirs
-foot/                   terminal
-fuzzel/                 launcher appearance
-git/                    git defaults (identity is not tracked)
-gtk/                    GTK3/GTK4 settings
-mpv/                    video player
-pkg-lists/              installed package snapshots
+foot/                   terminal config and search keybinds
+fuzzel/                 launcher appearance and typography
+git/                    git defaults (user identity is not tracked)
+gtk/                    GTK3/GTK4 settings and cursor inheritance
+mpv/                    video player config and hardware acceleration
 pipewire/               audio quirks for browsers and voice apps
-starship/               prompt
-sway/                   Sway config and helper scripts
-systemd/                user units (failure notifications, wakatime updater)
-thunar/                 Thunar settings and context menu actions
-tmux/                   tmux config
+starship/               prompt configuration
+sway/                   Sway window manager config and helper scripts
+  host.conf.example     template for machine-specific hardware overrides
+systemd/                user units (failure alerts, wakatime updater)
+thunar/                 Thunar settings and custom context actions
+tmux/                   tmux status and keybindings
 wal/                    pywal templates for every themed program
 xdg/                    MIME defaults, user dirs, fontconfig, Wayland env
 xdg-desktop-portal-wlr/ screen sharing portal
-install.sh              stow wrapper
+install.sh              stow wrapper and dependency check
 LICENSE                 MIT
 ```
 
 ## Requirements
 
-Packages the configuration actually calls:
+Install the desktop ecosystem on Arch Linux:
 
 ```bash
 sudo pacman -S sway swaybg swaylock swayosd foot fuzzel fish starship tmux \
@@ -70,16 +73,13 @@ sudo pacman -S sway swaybg swaylock swayosd foot fuzzel fish starship tmux \
 yay -S python-pywal16
 ```
 
-Two assets are not packaged and have to be installed by hand:
+Two optional assets are not packaged:
 
-- **Cursor**: the configs name `Doro`; put any XCursor theme in
-  `~/.local/share/icons/<name>` and change the name in `gtk-3.0/settings.ini`,
-  `gtk-4.0/settings.ini` and `~/.icons/default/index.theme`.
-- **Wallpapers**: `Super+Shift+w` lists `~/pictures/wallpapers`, which starts
-  empty.
-
-mpv is the default handler for video and audio, File Roller for archives,
-Evince for PDF.
+- **Cursor**: the configuration names `Doro`. Put any XCursor theme in
+  `~/.local/share/icons/<name>` and update the theme name in
+  `gtk/.config/gtk-3.0/settings.ini`, `gtk-4.0/settings.ini`, and
+  `gtk/.icons/default/index.theme`.
+- **Wallpapers**: `Super+Shift+w` searches `~/pictures/wallpapers`.
 
 ## Install
 
@@ -89,136 +89,146 @@ cd ~/dotfiles
 ./install.sh
 ```
 
-`install.sh` links each package into `$HOME` with `stow -R`, then reports
-missing programs and the steps below. It never installs packages and never
-touches files it does not track.
+`install.sh` verifies requirements, prepares directories, and links each
+package into `$HOME` with `stow -R`. It never modifies untracked files.
 
-First run, so the desktop has a palette:
+Bootstrap your pywal palette on first run:
 
 ```bash
-wal -i ~/pictures/wallpapers/<your wallpaper>
+wal -i ~/pictures/wallpapers/<your-wallpaper.jpg>
 ~/.config/sway/scripts/wal-theme.sh -R
 ```
 
-Log out and back in, or run `swaymsg reload`.
+Then reload Sway (`Super+Shift+c` or `swaymsg reload`).
 
-## What to change
+## Machine-Specific Setup (`host.conf`)
 
-These parts assume this machine. Everything still works if you leave them, but
-you will want to edit them:
+By default, Sway auto-detects connected outputs and assigns workspaces
+dynamically. To arrange multi-monitor layouts, pin workspaces, or apply device
+quirks, copy the example template:
 
-| Path | Why |
+```bash
+cp ~/.config/sway/host.conf.example ~/.config/sway/host.conf
+```
+
+`host.conf` is ignored by git (`.gitignore`). Example directives:
+
+```sway
+# Position dual monitors:
+output eDP-1 scale 1.0 subpixel rgb position 1920 0
+output HDMI-A-2 scale 1.0 subpixel rgb position 0 0
+
+# Pin workspaces to specific screens:
+workspace 1 output HDMI-A-2 eDP-1
+workspace 7 output eDP-1 HDMI-A-2
+
+# Device quirks or gaming mouse sensitivity:
+input "2362:9520:PixArt_Gaming_Mouse" {
+    accel_profile flat
+    pointer_accel 0
+}
+```
+
+## Optional Personal Configs
+
+A few files fit specific development workflows and can be adjusted or removed:
+
+| Path | Purpose |
 |---|---|
-| `sway/config.d/output.conf`, `workspaces.conf`, `bin/.../sway-output-toggle` | output names `eDP-1` and `HDMI-A-2`, and workspaces 1-6 on the external display |
-| `sway/config.d/input.conf` | a NACODEX wireless dongle repeats a brightness key, so two of its interfaces are disabled |
-| `sway/config.d/wacom.conf` | maps a Wacom tablet to `HDMI-A-2` |
-| `sway/scripts/brightness-switch.sh` | external brightness through `ddcutil` |
-| `xdg/.config/mimeapps.list` | defaults include Brave and Sober |
-| `git/.config/git/config` | defaults only; your identity stays in `~/.gitconfig` |
-| `fish/functions/piw.fish` | expects `~/workspace/{projects,c,vault}` and the `pi` agent |
-| `systemd/user/wakatime-cli-update.*` | only useful with WakaTime |
+| `git/.config/git/config` | Global git defaults; set your name/email in `~/.gitconfig` |
+| `xdg/.config/mimeapps.list` | Default applications (includes Brave, Loupe, Evince) |
+| `fish/functions/piw.fish` | Quick directory jump for `~/workspace/{projects,c,vault}` |
+| `systemd/user/wakatime-cli-update.*` | Automated daily updater for `wakatime-cli` |
 
 ## Keybindings
 
-`Super` is the Mod4 key.
+`Super` is the Mod4 (Windows/Command) key.
 
 ### Basics
 
 | Key | Action |
 |---|---|
-| `Super+Return` | terminal |
-| `Super+d` | application launcher |
-| `Super+Tab` | window switcher |
-| `Super+Shift+q` | close window |
-| `Super+Shift+c` | reload config |
-| `Super+Shift+e` | exit Sway |
-| `Super+/` | keybinding cheatsheet |
+| `Super+Return` | Terminal (`foot`) |
+| `Super+d` | Application launcher (`fuzzel`) |
+| `Super+Tab` | Window switcher |
+| `Super+Shift+q` | Close window |
+| `Super+Shift+c` | Reload Sway config |
+| `Super+Shift+e` | Exit Sway |
+| `Super+/` | Keybinding cheatsheet popup |
 
 ### Utilities
 
 | Key | Action |
 |---|---|
-| `Super+Shift+s`, `Print` | screenshot (area, window, or display) |
-| `Super+Shift+r` | screen recorder (area, window, or display) |
-| `Super+Shift+w` | wallpaper picker |
-| `Super+Shift+v` | clipboard history |
-| `Super+Alt+v` | clear clipboard history |
-| `Super+Shift+BackSpace` | lock screen |
-| `Super+Shift+Delete` | power menu |
+| `Super+Shift+s`, `Print` | Screenshot (Area, Window, or Display) |
+| `Super+Shift+r` | Screen recorder with desktop audio |
+| `Super+Shift+w` | GTK Wallpaper picker modal |
+| `Super+Shift+v` | Clipboard history |
+| `Super+Alt+v` | Clear clipboard history |
+| `Super+Shift+BackSpace` | Lock screen (`swaylock`) |
+| `Super+Shift+Delete` | Power menu (Lock, Suspend, Reboot, Shutdown) |
 
-### Window
+### Window Management
 
 | Key | Action |
 |---|---|
-| `Super+h/j/k/l`, `Super+arrows` | move focus |
-| `Super+Shift+h/j/k/l` | move window |
-| `Super+o` | focus the other display |
-| `Super+Shift+o` | move window to the other display |
-| `Super+b`, `Super+v` | split horizontal, vertical |
-| `Super+s`, `Super+w`, `Super+e` | stacking, tabbed, toggle split |
-| `Super+f` | fullscreen |
-| `Super+Shift+space` | toggle floating |
-| `Super+p` | floating and sticky |
-| `Super+space` | toggle focus between tiling and floating |
-| `Super+a` | focus parent |
-| `Super+r` then `h/j/k/l` | resize |
-| `Super+Shift+minus`, `Super+minus` | send to scratchpad, show scratchpad |
+| `Super+h/j/k/l`, `Super+arrows` | Move focus |
+| `Super+Shift+h/j/k/l` | Move window |
+| `Super+o` | Cycle focus to the next display |
+| `Super+Shift+o` | Move container to the next display |
+| `Super+b`, `Super+v` | Split horizontal, vertical |
+| `Super+s`, `Super+w`, `Super+e` | Stacking, tabbed, toggle split |
+| `Super+f` | Fullscreen toggle |
+| `Super+Shift+space` | Floating toggle |
+| `Super+p` | Floating + sticky toggle |
+| `Super+space` | Focus toggle (tiling ↔ floating) |
+| `Super+a` | Focus parent container |
+| `Super+r` then `h/j/k/l` | Resize mode |
+| `Super+Shift+minus`, `Super+minus` | Move to / show scratchpad |
 
-### Workspaces
+### Hardware Keys
 
-`Super+1..0` switches workspace, `Super+Shift+1..0` moves the focused window
-to it.
-
-### Hardware keys
-
-Volume, mute, microphone mute, brightness, keyboard backlight, and media
-playback are bound to the XF86 keys.
+- **Volume / Mute**: XF86Audio keys via `swayosd-client`
+- **Microphone Mute**: Hardware mic toggle with status bar indicator
+- **Brightness**: Internal backlight via `swayosd-client`, external via `ddcutil`
+- **Keyboard Backlight**: ThinkPad keyboard backlight stepped through OSD
+- **Media**: Play/pause, next, previous via `playerctl`
 
 ## Theming
 
-Changing the wallpaper runs `sway/scripts/wal-theme.sh`, which calls pywal and
-reloads everything that reads the palette:
+Wallpaper selection triggers `sway/scripts/wal-theme.sh`, generating pywal
+palettes and reloading running clients:
 
-| Target | Template | Applies to |
+| Target | Template | Applied Component |
 |---|---|---|
-| `colors-sway` | Sway variables | borders, bar, workspace colors |
-| `colors-foot.ini` | foot | terminal palette |
-| `colors-fuzzel.ini` | fuzzel | launcher |
-| `colors-mako` | mako | notifications |
-| `colors-gtk.css` | GTK3 | GTK apps and Thunar |
-| `colors-swaylock` | swaylock | lock screen |
-| `style-swayosd.css` | SwayOSD | volume and brightness overlay |
+| `colors-sway` | Sway variables | Borders, bar, workspace buttons |
+| `colors-foot.ini` | foot | Terminal 16-color palette |
+| `colors-fuzzel.ini` | fuzzel | App launcher & dmenu dialogs |
+| `colors-mako` | mako | Notification popups |
+| `colors-gtk.css` | GTK3 | GTK applications & Thunar |
+| `colors-swaylock` | swaylock | Lockscreen ring & indicators |
+| `style-swayosd.css` | SwayOSD | Volume & brightness indicators |
 
-The lock screen uses a blurred, darkened copy of the wallpaper
-(`~/.cache/wal/bg-lock.jpg`) generated by the same script. btop uses its
-built-in `TTY` theme, so it follows the terminal palette without a template.
+Lock screen uses a frosted, blurred version of the wallpaper generated
+proportionally to the active display resolution. `btop` uses its builtin `TTY`
+theme to follow terminal colors without generation.
 
-## Displays
+## Status Bar
 
-Both outputs run at scale 1.0 with RGB subpixel rendering. Workspaces 1-6 are
-pinned to `HDMI-A-2` and 7-10 to `eDP-1`, each with the other output as a
-fallback, so a single-display setup still works.
-
-## Status bar
-
-`sway/scripts/status.sh` prints one line:
+`sway/scripts/status.sh` formats the top bar into grouped modules:
 
 ```
-REC 00:42  │  󰎆 Artist - Title  │  󰔏 54°C · 󰍛 8.2G · 󰏗 13  │  󰖩 · 󰖀 45% · 󰍭 · 󰂀 78%  │  󰃭 28 Oct · 19:51
+REC 00:42  │  󰎆 Artist - Track  │  󰔏 54°C · 󰍛 8.2G · 󰏗 13  │  󰖩 · 󰖀 45% · 󰍭 · 󰂀 78%  │  󰃭 28 Oct · 19:51
 ```
 
-Recording state and now-playing are on the left so their text grows and
-shrinks without moving the hardware, peripheral, and clock sections. Each
-value is cached in `/tmp` for 3-60 seconds; the bar refreshes every second
-only while recording.
-
-## Notes
-
-- `pkg-lists/` is a snapshot of this machine, not a requirement list.
-- `status.sh` reads `/sys/class/thermal/thermal_zone0/temp`; a machine with a
-  different thermal zone order shows the wrong sensor.
-- Screen recording captures desktop audio from the default sink monitor. The
-  microphone is not recorded.
+- **Transient on the left**: Screen recording timer and now-playing media grow
+  dynamically without displacing hardware metrics or the clock.
+- **Hardware sensors**: Automatically discovers package/core thermal sensors
+  across Intel, AMD, and ARM architectures.
+- **Contextual indicators**: Microphone mute glyph appears only when muted;
+  battery icon scales through 7 charge tiers.
+- **Atomic caching**: Metric updates run asynchronously with non-blocking locks
+  to ensure zero frame stutter.
 
 ## License
 

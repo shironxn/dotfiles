@@ -56,5 +56,8 @@ if ! git config --global user.email >/dev/null 2>&1; then
 fi
 [ -d "$HOME/.local/share/icons/Doro" ] ||
     echo "  * the Doro cursor theme is not in this repo; install it or change the cursor name"
-echo "  * adjust output names in sway/config.d/output.conf and workspaces.conf"
+if [ ! -f "$HOME/.config/sway/host.conf" ]; then
+    echo "  * for custom monitor positions, workspace pinning, or device quirks:"
+    echo "      cp ~/.config/sway/host.conf.example ~/.config/sway/host.conf"
+fi
 echo "  * log out and back in, or run 'swaymsg reload'"
