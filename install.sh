@@ -26,8 +26,9 @@ if ((${#missing[@]})); then
 fi
 
 packages=(
-    bin btop fastfetch fish foot fuzzel git gtk mpv pipewire starship
-    sway systemd thunar tmux wal xdg xdg-desktop-portal-wlr
+    bin brave btop fastfetch fish fontconfig foot fuzzel git gtk mpv
+    pipewire starship sway systemd thunar tmux wal xdg
+    xdg-desktop-portal-wlr
 )
 
 echo "==> preparing directories"

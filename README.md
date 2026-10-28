@@ -31,16 +31,14 @@ portable across machines.
 ## Layout
 
 ```
-bin/                    scripts installed to ~/.local/bin
-  menu-launcher         fuzzel launcher with flatpak data dirs
+bin/                    general command-line scripts installed to ~/.local/bin
   notify-failure        desktop alert for failed systemd user units
   pick-fuzzel           shared dmenu wrapper for every picker
-  sway-output-toggle    move focus or a window to the other display
-  wakatime-cli-update   keep wakatime-cli updated to latest release
-  window-switcher       fuzzel window switcher
+brave/                  Wayland flags for Brave browser
 btop/                   system monitor (uses terminal palette)
 fastfetch/              login system info and ascii art
 fish/                   shell config, aliases, flatpak dirs
+fontconfig/             LCD subpixel hinting and CJK font rules
 foot/                   terminal config and search keybinds
 fuzzel/                 launcher appearance and typography
 git/                    git defaults (user identity is not tracked)
@@ -50,11 +48,12 @@ pipewire/               audio quirks for browsers and voice apps
 starship/               prompt configuration
 sway/                   Sway window manager config and helper scripts
   host.conf.example     template for machine-specific hardware overrides
-systemd/                user units (failure alerts, wakatime updater)
+  scripts/              desktop helpers (brightness, recorder, screenshot, etc.)
+systemd/                user units (failure alerts)
 thunar/                 Thunar settings and custom context actions
 tmux/                   tmux status and keybindings
 wal/                    pywal templates for every themed program
-xdg/                    MIME defaults, user dirs, fontconfig, Wayland env
+xdg/                    MIME defaults, user dirs, Wayland env
 xdg-desktop-portal-wlr/ screen sharing portal
 install.sh              stow wrapper and dependency check
 LICENSE                 MIT
@@ -131,14 +130,14 @@ input "2362:9520:PixArt_Gaming_Mouse" {
 
 ## Optional Personal Configs
 
-A few files fit specific development workflows and can be adjusted or removed:
+A few files fit specific desktop choices and can be adjusted or removed:
 
 | Path | Purpose |
 |---|---|
 | `git/.config/git/config` | Global git defaults; set your name/email in `~/.gitconfig` |
 | `xdg/.config/mimeapps.list` | Default applications (includes Brave, Loupe, Evince) |
-| `fish/functions/piw.fish` | Quick directory jump for `~/workspace/{projects,c,vault}` |
-| `systemd/user/wakatime-cli-update.*` | Automated daily updater for `wakatime-cli` |
+| `brave/.config/brave-flags.conf` | Wayland flags for the Brave browser |
+| `fontconfig/.config/fontconfig/conf.d/` | Japanese font preference rule (Noto Sans CJK JP) |
 
 ## Keybindings
 
