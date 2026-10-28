@@ -28,6 +28,7 @@ PACKAGES=(
     fuzzel
     git
     gtk
+    mpv
     starship
     sway
     thunar

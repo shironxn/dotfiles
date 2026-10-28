@@ -27,6 +27,35 @@ application/pdf=org.gnome.Evince.desktop
 application/x-bzpdf=org.gnome.Evince.desktop
 application/x-gzpdf=org.gnome.Evince.desktop
 application/x-xzpdf=org.gnome.Evince.desktop
+video/mp4=mpv.desktop
+video/x-matroska=mpv.desktop
+video/webm=mpv.desktop
+video/quicktime=mpv.desktop
+video/x-msvideo=mpv.desktop
+video/x-flv=mpv.desktop
+video/mpeg=mpv.desktop
+video/ogg=mpv.desktop
+audio/mpeg=mpv.desktop
+audio/mp3=mpv.desktop
+audio/flac=mpv.desktop
+audio/x-wav=mpv.desktop
+audio/wav=mpv.desktop
+audio/ogg=mpv.desktop
+audio/x-vorbis+ogg=mpv.desktop
+audio/mp4=mpv.desktop
+audio/x-m4a=mpv.desktop
+audio/opus=mpv.desktop
+application/zip=org.gnome.FileRoller.desktop
+application/x-tar=org.gnome.FileRoller.desktop
+application/x-compressed-tar=org.gnome.FileRoller.desktop
+application/x-bzip-compressed-tar=org.gnome.FileRoller.desktop
+application/x-xz-compressed-tar=org.gnome.FileRoller.desktop
+application/x-7z-compressed=org.gnome.FileRoller.desktop
+application/x-rar=org.gnome.FileRoller.desktop
+application/vnd.rar=org.gnome.FileRoller.desktop
+application/gzip=org.gnome.FileRoller.desktop
+application/x-bzip2=org.gnome.FileRoller.desktop
+application/x-xz=org.gnome.FileRoller.desktop
 
 [Added Associations]
 
