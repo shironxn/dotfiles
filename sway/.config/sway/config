@@ -5,7 +5,7 @@ set $down j
 set $up k
 set $right l
 set $term foot
-set $menu ~/.local/bin/menu-launcher
+set $menu ~/.config/sway/scripts/launcher.sh
 
 # Fallback palette, overridden by ~/.cache/wal/colors-sway when pywal has run.
 set $color0 #1e1e2e
