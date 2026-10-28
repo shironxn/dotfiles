@@ -26,10 +26,7 @@ fish_add_path "$HOME/.local/bin"
 # Flatpak desktop entries and binaries
 set -gx XDG_DATA_DIRS /var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:/usr/local/share:/usr/share
 
-# Pi agent: short-lived subagent caches cost more to write than to miss.
-set -gx PI_CACHE_RETENTION long
-set -gx PI_SUBAGENT_CACHE_RETENTION short
-
-# Telemetry opt-out (the npx skills CLI defaults to on)
+# Development and privacy defaults
+test -d "$HOME/.local/share/go"; and set -gx GOPATH "$HOME/.local/share/go"
 set -gx DISABLE_TELEMETRY 1
 set -gx DO_NOT_TRACK 1

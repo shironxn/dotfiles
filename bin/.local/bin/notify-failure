@@ -5,12 +5,13 @@
 set -u
 
 unit="${1:-unknown}"
-log="$HOME/backups/unit-failure.log"
-rate_dir="$HOME/.cache/unit-failure-alert"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}"
+log="$state_dir/unit-failure.log"
+rate_dir="${XDG_CACHE_HOME:-$HOME/.cache}/unit-failure-alert"
 mark="$rate_dir/${unit//\//_}"
 today=$(date +%F)
 
-mkdir -p "$(dirname "$log")" "$rate_dir"
+mkdir -p "$state_dir" "$rate_dir"
 printf '%s FAILED: %s\n' "$(date '+%F %T')" "$unit" >>"$log"
 
 if [ -f "$mark" ] && [ "$(cat "$mark" 2>/dev/null)" = "$today" ]; then
