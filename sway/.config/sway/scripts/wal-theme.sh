@@ -1,63 +1,56 @@
 #!/bin/sh
-# Wal wrapper: apply theme + reload services
-# Called from:
-#   autostart (-R / --restore): restore previous theme on sway start
-#   wallpaper.sh (-i img): apply new wallpaper theme
+# Apply a pywal theme and reload every dependent service.
+#   wal-theme.sh -i <image>   select a new wallpaper
+#   wal-theme.sh -R           restore the previous theme at login
 set -eu
 
-RESTORE=false
-case "${1:-}" in -R|--restore) RESTORE=true;; esac
+restore=0
+case "${1:-}" in
+-R | --restore) restore=1 ;;
+esac
 
-# Guard: skip on first run (no pywal session yet)
-if $RESTORE && [ ! -f ~/.cache/wal/colors ]; then
-  echo '[wal-theme] No pywal session to restore; skipping.'
-  killall swaybg 2>/dev/null || true
-  nohup swaybg -c '#000000' -m fill &>/dev/null &
+WAL_DIR="$HOME/.cache/wal"
+CONFIG="$HOME/.config"
+
+if [ "$restore" -eq 1 ] && [ ! -f "$WAL_DIR/colors" ]; then
+  echo '[wal-theme] no pywal session to restore'
   exit 0
 fi
 
-# Run pywal
-if $RESTORE; then
-  timeout 120 wal "$@" 2>/dev/null || echo '[wal-theme] wal restore skipped'
-else
-  timeout 120 wal "$@" 2>/dev/null || echo '[wal-theme] wal skipped, using cached colors'
-fi
+timeout 120 wal "$@" 2>/dev/null || echo '[wal-theme] wal failed, keeping cached colors'
+[ -f "$WAL_DIR/colors" ] || exit 0
 
-# Exit early if no colors were generated
-[ ! -f ~/.cache/wal/colors ] && exit 0
+# Generated configs that pywal owns: link them into place.
+for pair in \
+  "colors-mako:$CONFIG/mako/config" \
+  "colors-swaylock:$CONFIG/swaylock/config" \
+  "colors-gtk.css:$CONFIG/gtk-3.0/gtk.css" \
+  "style-swayosd.css:$CONFIG/swayosd/style.css"; do
+  src="$WAL_DIR/${pair%%:*}"
+  dst="${pair#*:}"
+  [ -f "$src" ] && ln -sf "$src" "$dst"
+done
 
-# Mako, Swaylock, GTK: symlink to pywal cache
-[ -f ~/.cache/wal/colors-mako ] && ln -sf ~/.cache/wal/colors-mako ~/.config/mako/config
-[ -f ~/.cache/wal/colors-swaylock ] && ln -sf ~/.cache/wal/colors-swaylock ~/.config/swaylock/config
-[ -f ~/.cache/wal/colors-gtk.css ] && ln -sf ~/.cache/wal/colors-gtk.css ~/.config/gtk-3.0/gtk.css
 makoctl reload 2>/dev/null || true
 
-# SwayOSD: symlink to pywal cache + restart server
-[ -f ~/.cache/wal/style-swayosd.css ] && ln -sf ~/.cache/wal/style-swayosd.css ~/.config/swayosd/style.css
-
 killall -q swayosd-server 2>/dev/null || true
-nohup swayosd-server --style ~/.config/swayosd/style.css &>/dev/null &
+nohup swayosd-server --style "$CONFIG/swayosd/style.css" >/dev/null 2>&1 &
 
-# Foot: signal reload for new colors
 killall -USR1 foot 2>/dev/null || true
 
-
-# Wallpaper: update symlink for Sway native background handling
-if [ -f ~/.cache/wal/wal ]; then
-  ln -sf "$(cat ~/.cache/wal/wal)" ~/.cache/wal/bg
-  # Frosted lockscreen backdrop: downscale, blur, dim (swaylock has no effects)
-  magick "$(cat ~/.cache/wal/wal)" -scale 1920x1080^ -gravity center -extent 1920x1080 \
+# Sway reads the wallpaper from this symlink; swaylock uses the blurred copy.
+if [ -f "$WAL_DIR/wal" ]; then
+  wallpaper=$(cat "$WAL_DIR/wal")
+  ln -sf "$wallpaper" "$WAL_DIR/bg"
+  magick "$wallpaper" -scale 1920x1080^ -gravity center -extent 1920x1080 \
     -filter Gaussian -blur 0x8 -fill black -colorize 40% \
-    ~/.cache/wal/bg-lock.jpg 2>/dev/null || true
+    "$WAL_DIR/bg-lock.jpg" 2>/dev/null || true
 fi
 
-# Reload sway (only when changing wallpaper, not on startup)
-if ! $RESTORE; then
+if [ "$restore" -eq 0 ]; then
   swaymsg reload 2>/dev/null || true
 fi
 
-
-# GSettings sync
 gsettings set org.gnome.desktop.interface gtk-theme "adw-gtk3-dark" 2>/dev/null || true
 gsettings set org.gnome.desktop.interface font-name "JetBrainsMono Nerd Font 13" 2>/dev/null || true
 gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" 2>/dev/null || true

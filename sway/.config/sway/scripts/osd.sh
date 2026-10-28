@@ -1,38 +1,40 @@
 #!/bin/sh
-# OSD — keyboard backlight via swayosd
-# Volume, brightness, mic udah pake swayosd-client langsung dari keybinds
-# Usage: osd.sh kbd up|down
+# Keyboard backlight OSD. Volume, brightness and microphone are handled by
+# swayosd-client directly from the keybinds.
 set -eu
 
-KBD_DEV="tpacpi::kbd_backlight"
-KBD_MAX=$(cat /sys/class/leds/$KBD_DEV/max_brightness 2>/dev/null || echo 2)
+DEV="tpacpi::kbd_backlight"
 
 case "${1:-}" in
-  kbd)
-    arg="${2:-}"
-    if ! command -v brightnessctl >/dev/null; then
-      swayosd-client --custom-icon=keyboard-brightness-symbolic --custom-message="brightnessctl not found"
-      exit 1
-    fi
-    if ! brightnessctl -l 2>/dev/null | grep -q "$KBD_DEV"; then
-      swayosd-client --custom-icon=keyboard-brightness-symbolic --custom-message="No keyboard backlight"
-      exit 0
-    fi
-    case "$arg" in
-      up)   brightnessctl -d "$KBD_DEV" set +1 2>/dev/null ;;
-      down) brightnessctl -d "$KBD_DEV" set 1- 2>/dev/null ;;
-      *)    echo "Usage: $0 kbd up|down" >&2; exit 1 ;;
-    esac
-
-    # Use mako notification (swayosd custom OSD has blank space on some overlays)
-    K=$(cat /sys/class/leds/$KBD_DEV/brightness 2>/dev/null || echo 0)
-    case "$K" in
-      0) notify-send -t 1200 -h string:x-canonical-private-synchronous:osd "󰌌 KBD Off" ;;
-      1) notify-send -t 1200 -h string:x-canonical-private-synchronous:osd "󰌌 KBD Low" ;;
-      2) notify-send -t 1200 -h string:x-canonical-private-synchronous:osd "󰌌 KBD High" ;;
-    esac
-    ;;
-
-  *)
-    echo "Usage: $0 kbd up|down" >&2; exit 1 ;;
+kbd) ;;
+*) echo "usage: $0 kbd up|down" >&2; exit 1 ;;
 esac
+case "${2:-}" in
+up | down) ;;
+*) echo "usage: $0 kbd up|down" >&2; exit 1 ;;
+esac
+
+if ! command -v brightnessctl >/dev/null; then
+  swayosd-client --custom-icon=keyboard-brightness-symbolic --custom-message="brightnessctl missing"
+  exit 1
+fi
+
+if ! brightnessctl -l 2>/dev/null | grep -q "$DEV"; then
+  swayosd-client --custom-icon=keyboard-brightness-symbolic --custom-message="No keyboard backlight"
+  exit 0
+fi
+
+if [ "$2" = "up" ]; then
+  brightnessctl -d "$DEV" set +1 2>/dev/null || true
+else
+  brightnessctl -d "$DEV" set 1- 2>/dev/null || true
+fi
+
+level=$(cat "/sys/class/leds/$DEV/brightness" 2>/dev/null || echo 0)
+case "$level" in
+0) msg="KBD Off" ;;
+1) msg="KBD Low" ;;
+*) msg="KBD High" ;;
+esac
+
+notify-send -t 1200 -h string:x-canonical-private-synchronous:osd "󰌌 $msg"

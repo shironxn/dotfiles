@@ -1,5 +1,5 @@
 #!/bin/sh
-# Screenshot — simple & clean (no annotate, no recording)
+# Screenshot: area, window, or display.
 set -eu
 
 dir="$HOME/pictures/screenshots"
