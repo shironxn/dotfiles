@@ -106,12 +106,18 @@ while true; do
   [ -n "$kbd_str" ] && right="${right}  ${kbd_str}"
   right="${right}  󰃭 ${date_str}"
 
-  # Combine
-  if [ -n "$middle" ]; then
-    echo "${left}  |  ${middle}  |  ${right}"
-  else
-    echo "${left}  |  ${right}"
+  # Recording status indicator
+  rec_str=""
+  if pgrep -x wf-recorder >/dev/null; then
+    rec_str="🔴 REC  |  "
   fi
 
-  sleep 10
+  # Combine
+  if [ -n "$middle" ]; then
+    echo "${rec_str}${left}  |  ${middle}  |  ${right}"
+  else
+    echo "${rec_str}${left}  |  ${right}"
+  fi
+
+  sleep 4
 done
