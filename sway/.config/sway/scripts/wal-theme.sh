@@ -28,7 +28,7 @@ for pair in \
   "style-swayosd.css:$CONFIG/swayosd/style.css"; do
   src="$WAL_DIR/${pair%%:*}"
   dst="${pair#*:}"
-  [ -f "$src" ] && ln -sf "$src" "$dst"
+  if [ -f "$src" ]; then ln -sf "$src" "$dst"; fi
 done
 
 makoctl reload 2>/dev/null || true

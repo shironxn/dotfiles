@@ -44,10 +44,10 @@ fi
 
 if [ "$1" = "up" ]; then
   level=$((level + step))
-  [ "$level" -gt 100 ] && level=100
+  if [ "$level" -gt 100 ]; then level=100; fi
 else
   level=$((level - step))
-  [ "$level" -lt 0 ] && level=0
+  if [ "$level" -lt 0 ]; then level=0; fi
 fi
 echo "$level" > "$CACHE"
 

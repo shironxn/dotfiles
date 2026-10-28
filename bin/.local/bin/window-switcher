@@ -13,4 +13,6 @@ windows=$(swaymsg -t get_tree | jq -r '
 con_id=$(printf '%s\n' "$windows" |
   pick-fuzzel " switch to " -w 65 -l 10 --with-nth=1 --accept-nth=2) || exit 0
 
-[ -n "$con_id" ] && swaymsg "[con_id=$con_id] focus"
+if [ -n "$con_id" ]; then
+  swaymsg "[con_id=$con_id] focus"
+fi

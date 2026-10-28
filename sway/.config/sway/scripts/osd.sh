@@ -25,9 +25,9 @@ if ! brightnessctl -l 2>/dev/null | grep -q "$DEV"; then
 fi
 
 if [ "$2" = "up" ]; then
-  brightnessctl -d "$DEV" set +1 2>/dev/null || true
+  brightnessctl -d "$DEV" set +1 >/dev/null 2>&1 || true
 else
-  brightnessctl -d "$DEV" set 1- 2>/dev/null || true
+  brightnessctl -d "$DEV" set 1- >/dev/null 2>&1 || true
 fi
 
 level=$(cat "/sys/class/leds/$DEV/brightness" 2>/dev/null || echo 0)
