@@ -1,24 +1,10 @@
 #!/bin/sh
-# pick-fuzzel — the single entry point for fuzzel in this config.
-#
+# Shared fuzzel wrapper for every dmenu-style picker.
 #   pick-fuzzel <prompt> [extra fuzzel args...]
-#
-# Six call sites used to spell out their own -p/-i/-w/-l flags, so the menus
-# drifted apart: two had no prompt at all, two set different widths, and only
-# one was case-insensitive. Anything that is meant to look and behave the
-# same is decided here instead of per call site.
-#
-# Colours are deliberately not handled here: ~/.config/fuzzel/fuzzel.ini
-# already includes ~/.cache/wal/colors-fuzzel.ini, so fuzzel follows pywal
-# without being told. Pickers that need more than text go to the GTK picker
-# (~/.config/sway/scripts/wallpaper-picker.py), which reads pywal's
-# colors.json the same way.
-
+# Colors come from ~/.config/fuzzel/fuzzel.ini, which includes the pywal theme.
 prompt="${1:-}"
 [ $# -gt 0 ] && shift
 
-# -p "" is a valid but useless prompt, so only send the flag when there is
-# something to show.
 [ -n "$prompt" ] && set -- -p "$prompt" "$@"
 
 exec fuzzel -d -i --minimal-lines "$@"

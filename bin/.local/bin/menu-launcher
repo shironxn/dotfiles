@@ -1,19 +1,9 @@
 #!/bin/sh
-# menu-launcher — the $menu app launcher (bound to $mod+d).
-#
-# The name used to be menu-fuzzel, which implied it was the shared entry
-# point for every picker. It never was: the other menus go through
-# pick-fuzzel, and they do not need the fix below. What this actually is
-# is the app launcher plus one environment repair.
-#
-# Sway does not inherit the flatpak data dirs (see /etc/environment and
-# ~/.config/fish/config.fish), so without this the flatpak entries are
-# invisible to fuzzel. Prepend them here rather than in the sway config,
-# where they would leak into unrelated exec rules.
-
+# Application launcher ($mod+d). Adds the flatpak export dirs that Sway does
+# not inherit, so flatpak entries show up in fuzzel.
 case ":$XDG_DATA_DIRS:" in
-    *":/var/lib/flatpak/exports/share:"*) ;;
-    *) export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" ;;
+*":/var/lib/flatpak/exports/share:"*) ;;
+*) export XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" ;;
 esac
 
 exec fuzzel "$@"
