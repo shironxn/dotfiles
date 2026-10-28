@@ -47,9 +47,12 @@ while true; do
   # Package updates (1h cache, refreshed in the background)
   updates=$(cat "$UPDATES_CACHE" 2>/dev/null)
   updates=${updates:-0}
-  if ! fresh "$UPDATES_CACHE" 3600 && [ ! -f "$UPDATES_CACHE.lock" ]; then
-    : > "$UPDATES_CACHE.lock"
-    (put "$UPDATES_CACHE" "$(checkupdates 2>/dev/null | wc -l)"; rm -f "$UPDATES_CACHE.lock") &
+  if ! fresh "$UPDATES_CACHE" 3600; then
+    # flock releases on its own, so a killed checkupdates cannot wedge the timer.
+    (
+      flock -n 9 || exit 0
+      put "$UPDATES_CACHE" "$(checkupdates 2>/dev/null | wc -l)"
+    ) 9>>"$UPDATES_CACHE.lock" &
   fi
 
   sys_str="${temp_str} · ${ram_str}"
