@@ -7,6 +7,9 @@ set $right l
 set $term foot
 set $menu /home/shironxn/.local/bin/menu-launcher
 
+# Window titles & tab typography
+font pango:JetBrainsMono Nerd Font 13
+
 # --- Includes ---
 include ~/.cache/wal/colors-sway
 include ~/.config/sway/config.d/*.conf
