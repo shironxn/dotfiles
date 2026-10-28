@@ -10,7 +10,39 @@
 @define-color accent_bg_color {color4};
 @define-color accent_color {color4};
 
-/* Sharp corners — 0px radius for consistent minimal aesthetic */
+/* Sharp corners — 0px radius across all widgets, views, and selections */
 * {{
-    border-radius: 0px;
+    border-radius: 0;
+}}
+
+.view, iconview, .content-view, treeview, list, row, .tile,
+.view:selected, iconview:selected, .content-view:selected, treeview:selected, row:selected,
+.view:selected:focus, iconview:selected:focus, treeview:selected:focus,
+.view text:selected, iconview text:selected, textview text:selected,
+treeview.view:selected, treeview.view:selected:focus,
+flowbox flowboxchild:selected,
+.content-view .tile, .content-view .tile:selected, .content-view .tile:active,
+rubberband, .rubberband,
+entry, button, popover, dialog, menu, menuitem, tooltip {{
+    border-radius: 0;
+}}
+
+/* Thunar & Exo View specificity overrides */
+thunar .view,
+thunar iconview,
+thunar .standard-view,
+thunar .standard-view .view:selected,
+thunar .standard-view iconview:selected,
+thunar treeview.view:selected,
+ExoIconView,
+ExoIconView:selected,
+ExoIconView:selected:focus,
+ThunarIconView,
+ThunarIconView:selected,
+ThunarIconView:selected:focus,
+ThunarWindow .view:selected,
+ThunarWindow iconview:selected,
+ThunarWindow .standard-view .view:selected,
+ThunarWindow .standard-view iconview:selected {{
+    border-radius: 0;
 }}
