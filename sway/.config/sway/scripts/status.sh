@@ -20,7 +20,7 @@ while true; do
     rec_min=$((rec_elapsed / 60))
     rec_sec=$((rec_elapsed % 60))
     rec_timer=$(printf "%02d:%02d" "$rec_min" "$rec_sec")
-    rec_str="REC ${rec_timer}  │  "
+    rec_str="REC ${rec_timer}"
   fi
 
   # ── 2. System Hardware (CPU temp & RAM) ──
@@ -120,11 +120,15 @@ while true; do
   clock_str="󰃭 $(date +'%d %b · %H:%M')"
 
   # ── 6. Assemble Final Bar ──
-  if [ -n "$np" ]; then
-    echo "${rec_str}${sys_str}  │  ${np}  │  ${peri_str}  │  ${clock_str}"
-  else
-    echo "${rec_str}${sys_str}  │  ${peri_str}  │  ${clock_str}"
-  fi
+  # Layout order: [REC] │ [MEDIA] │ [SYSTEM] │ [PERIPHERALS] │ [DATE/TIME]
+  # Transient items (REC & MEDIA) expand to the left/center, keeping
+  # hardware, peripherals, and clock rock-solid on the right.
+  out=""
+  [ -n "$rec_str" ] && out="${out}${rec_str}  │  "
+  [ -n "$np" ]      && out="${out}${np}  │  "
+  out="${out}${sys_str}  │  ${peri_str}  │  ${clock_str}"
+
+  echo "$out"
 
   # 1s refresh when recording for live timer, otherwise 3s
   if [ "$is_recording" -eq 1 ]; then
