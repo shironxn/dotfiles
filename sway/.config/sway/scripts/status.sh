@@ -94,6 +94,19 @@ while true; do
     echo "$vol_str" > "$VOL_CACHE"
   fi
 
+  # Microphone Mute (contextual: only shown when muted, cached 3s)
+  mic_str=""
+  if [ -f "/tmp/sway-mic-mute" ] && [ $(( $(date +%s) - $(stat -c %Y "/tmp/sway-mic-mute" 2>/dev/null) )) -lt 3 ]; then
+    [ "$(cat /tmp/sway-mic-mute 2>/dev/null)" = "1" ] && mic_str=" · 󰍭"
+  else
+    if pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null | grep -qi 'yes'; then
+      mic_str=" · 󰍭"
+      echo "1" > /tmp/sway-mic-mute
+    else
+      echo "0" > /tmp/sway-mic-mute
+    fi
+  fi
+
   # Battery (dynamic tiered icon & charging status)
   battery=$(cat /sys/class/power_supply/BAT0/capacity 2>/dev/null || echo 0)
   charge=$(cat /sys/class/power_supply/BAT0/status 2>/dev/null || echo "?")
@@ -114,7 +127,7 @@ while true; do
   kbd_val=$(cat /sys/class/leds/tpacpi::kbd_backlight/brightness 2>/dev/null || echo 0)
   [ "$kbd_val" -gt 0 ] && kbd_str=" · 󰌌" || kbd_str=""
 
-  peri_str="${wifi_icon} · ${vol_str} · ${bat_str}${kbd_str}"
+  peri_str="${wifi_icon} · ${vol_str}${mic_str} · ${bat_str}${kbd_str}"
 
   # ── 5. Date & Time ──
   clock_str="󰃭 $(date +'%d %b · %H:%M')"

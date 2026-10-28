@@ -20,7 +20,9 @@ pactl list sources short | grep -v '\.monitor' | awk '{print $1}' | while read -
 done
 
 if [ "$NEW_STATE" -eq 1 ]; then
+    echo "1" > /tmp/sway-mic-mute
     swayosd-client --custom-icon=microphone-disabled-symbolic --custom-message="Muted" || true
 else
+    echo "0" > /tmp/sway-mic-mute
     swayosd-client --custom-icon=audio-input-microphone-symbolic --custom-message="On" || true
 fi
