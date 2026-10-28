@@ -21,7 +21,7 @@ while true; do
     rec_min=$((rec_elapsed / 60))
     rec_sec=$((rec_elapsed % 60))
     rec_timer=$(printf "%02d:%02d" "$rec_min" "$rec_sec")
-    rec_str="󰑃 REC ${rec_timer}  │  "
+    rec_str="REC ${rec_timer}  │  "
   fi
 
   # ── System Health ──
