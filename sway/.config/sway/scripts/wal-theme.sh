@@ -45,6 +45,10 @@ killall -USR1 foot 2>/dev/null || true
 # Wallpaper: update symlink for Sway native background handling
 if [ -f ~/.cache/wal/wal ]; then
   ln -sf "$(cat ~/.cache/wal/wal)" ~/.cache/wal/bg
+  # Frosted lockscreen backdrop: downscale, blur, dim (swaylock has no effects)
+  magick "$(cat ~/.cache/wal/wal)" -scale 1920x1080^ -gravity center -extent 1920x1080 \
+    -filter Gaussian -blur 0x8 -fill black -colorize 40% \
+    ~/.cache/wal/bg-lock.jpg 2>/dev/null || true
 fi
 
 # Reload sway (only when changing wallpaper, not on startup)
