@@ -10,7 +10,7 @@ if ! command -v stow >/dev/null 2>&1; then
 fi
 
 packages=(
-    bin fastfetch fish foot fuzzel git gtk mpv starship
+    bin btop fastfetch fish foot fuzzel git gtk mpv starship
     sway thunar tmux wal xdg xdg-desktop-portal-wlr
 )
 

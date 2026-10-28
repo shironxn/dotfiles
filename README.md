@@ -17,6 +17,7 @@ pywal16.
 | Locker | swaylock |
 | File manager | Thunar |
 | Media | mpv |
+| System monitor | btop |
 | Multiplexer | tmux |
 | Font | JetBrainsMono Nerd Font |
 | Icons | Papirus-Dark |
@@ -26,6 +27,7 @@ pywal16.
 
 ```
 bin/                    scripts installed to ~/.local/bin
+btop/                   system monitor
   menu-launcher         fuzzel launcher with flatpak data dirs
   pick-fuzzel           shared dmenu wrapper for every picker
   sway-output-toggle    move focus or a window to the other display
