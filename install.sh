@@ -1,50 +1,30 @@
 #!/usr/bin/env bash
-# dotfiles installer — GNU Stow declarative deployment
+# Deploy this repository into $HOME with GNU Stow.
 set -euo pipefail
 
 cd "$(dirname "$(readlink -f "$0")")"
 
-# Check prerequisite
 if ! command -v stow >/dev/null 2>&1; then
-    echo "==> Error: GNU Stow is required." >&2
-    echo "    Install with: sudo pacman -S stow" >&2
+    echo "error: GNU Stow is required (pacman -S stow)" >&2
     exit 1
 fi
 
-echo "==> [1/3] Preparing target directories..."
-mkdir -p "$HOME/.config" "$HOME/.local/bin"
-
-echo "==> [2/3] Setting script permissions..."
-chmod +x bin/.local/bin/* 2>/dev/null || true
-chmod +x sway/.config/sway/scripts/* 2>/dev/null || true
-mkdir -p "$HOME/pictures/screenshots" "$HOME/videos/recordings"
-
-# Packages to stow
-PACKAGES=(
-    bin
-    fastfetch
-    fish
-    foot
-    fuzzel
-    git
-    gtk
-    mpv
-    starship
-    sway
-    thunar
-    tmux
-    wal
-    xdg
-    xdg-desktop-portal-wlr
+packages=(
+    bin fastfetch fish foot fuzzel git gtk mpv starship
+    sway thunar tmux wal xdg xdg-desktop-portal-wlr
 )
 
-echo "==> [3/3] Stowing packages to $HOME..."
-for pkg in "${PACKAGES[@]}"; do
-    if [ -d "$pkg" ]; then
-        echo " -> Stowing $pkg"
-        stow --adopt -v -R -t "$HOME" "$pkg"
-    fi
+echo "==> preparing directories"
+mkdir -p "$HOME/.config" "$HOME/.local/bin" \
+    "$HOME/pictures/screenshots" "$HOME/videos/recordings"
+
+echo "==> setting script permissions"
+chmod +x bin/.local/bin/* sway/.config/sway/scripts/*
+
+echo "==> stowing"
+for pkg in "${packages[@]}"; do
+    echo "  -> $pkg"
+    stow -R -t "$HOME" "$pkg"
 done
 
-echo "==> All packages stowed successfully!"
-echo "==> Run 'swaymsg reload' or log in to your Sway session."
+echo "==> done. Log out and back in, or run 'swaymsg reload'."
