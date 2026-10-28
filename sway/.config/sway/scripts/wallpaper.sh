@@ -26,7 +26,7 @@ choose_fuzzel() {
 
 wallpaper=""
 if [ -x "$gtk_picker" ]; then
-  wallpaper=$(printf '%s\n' "$files" | "$gtk_picker" 2>/dev/null) || wallpaper=""
+  wallpaper=$(export PYTHONDONTWRITEBYTECODE=1; printf '%s\n' "$files" | "$gtk_picker" 2>/dev/null) || wallpaper=""
 fi
 [ -n "$wallpaper" ] || wallpaper=$(choose_fuzzel) || exit 0
 

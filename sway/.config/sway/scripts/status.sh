@@ -122,31 +122,43 @@ while true; do
     fi
   fi
 
-  # Battery
-  battery=$(cat /sys/class/power_supply/BAT0/capacity 2>/dev/null || echo 0)
-  charge=$(cat /sys/class/power_supply/BAT0/status 2>/dev/null || echo '')
-  if [ "$charge" = "Charging" ]; then
-    bat_icon="󰂄"
-  elif [ "$battery" -ge 90 ]; then
-    bat_icon="󰁹"
-  elif [ "$battery" -ge 70 ]; then
-    bat_icon="󰂀"
-  elif [ "$battery" -ge 50 ]; then
-    bat_icon="󰁾"
-  elif [ "$battery" -ge 30 ]; then
-    bat_icon="󰁼"
-  elif [ "$battery" -ge 15 ]; then
-    bat_icon="󰁺"
-  else
-    bat_icon="󰂃"
-  fi
+  # Battery (detect BAT0, BAT1, or omit cleanly on desktops without batteries)
+  bat_str=""
+  for b in /sys/class/power_supply/BAT*; do
+    if [ -d "$b" ]; then
+      battery=$(cat "$b/capacity" 2>/dev/null || echo 0)
+      charge=$(cat "$b/status" 2>/dev/null || echo '')
+      if [ "$charge" = "Charging" ]; then
+        bat_icon="󰂄"
+      elif [ "$battery" -ge 90 ]; then
+        bat_icon="󰁹"
+      elif [ "$battery" -ge 70 ]; then
+        bat_icon="󰂀"
+      elif [ "$battery" -ge 50 ]; then
+        bat_icon="󰁾"
+      elif [ "$battery" -ge 30 ]; then
+        bat_icon="󰁼"
+      elif [ "$battery" -ge 15 ]; then
+        bat_icon="󰁺"
+      else
+        bat_icon="󰂃"
+      fi
+      bat_str=" · ${bat_icon} ${battery}%"
+      break
+    fi
+  done
 
-  # Keyboard backlight
+  # Keyboard backlight (generic across vendors)
   kbd_str=""
-  kbd=$(cat /sys/class/leds/tpacpi::kbd_backlight/brightness 2>/dev/null || echo 0)
-  [ "$kbd" -gt 0 ] && kbd_str=" · 󰌌"
+  for d in /sys/class/leds/tpacpi::kbd_backlight/brightness /sys/class/leds/*kbd*backlight*/brightness /sys/class/leds/*::kbd_backlight/brightness; do
+    if [ -f "$d" ]; then
+      kbd=$(cat "$d" 2>/dev/null || echo 0)
+      [ "$kbd" -gt 0 ] && kbd_str=" · 󰌌"
+      break
+    fi
+  done
 
-  peri_str="${wifi} · ${vol_str}${mic_str} · ${bat_icon} ${battery}%${kbd_str}"
+  peri_str="${wifi} · ${vol_str}${mic_str}${bat_str}${kbd_str}"
   clock_str="󰃭 $(date +'%d %b · %H:%M')"
 
   out=""
