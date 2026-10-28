@@ -1,0 +1,7 @@
+[Unit]
+Description=Update wakatime-cli to the latest WakaTime release
+OnFailure=notify-failure@%N.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/wakatime-cli-update

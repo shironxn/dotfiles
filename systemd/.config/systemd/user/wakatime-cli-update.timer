@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily check for a new wakatime-cli release
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=1h
+AccuracySec=1h
+
+[Install]
+WantedBy=timers.target
