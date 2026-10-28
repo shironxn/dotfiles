@@ -1,98 +1,54 @@
-# shironxn's dotfiles
+# dotfiles
 
-**Arch Linux · Sway · Fish · Foot · Fuzzel · Pywal · GNU Stow**
+Sway desktop configuration for a ThinkPad X280 with an external 1080p monitor.
+Managed with [GNU Stow](https://www.gnu.org/software/stow/), themed by
+[pywal16](https://github.com/eylles/pywal16).
 
-A clean, minimal, lightweight Wayland desktop environment configured for high productivity and zero bloat.
+## Stack
 
----
+| Role | Program |
+|---|---|
+| Compositor | Sway (Wayland) |
+| Terminal | foot |
+| Shell | fish + starship |
+| Launcher, menus | fuzzel |
+| Notifications | mako |
+| OSD | SwayOSD |
+| Locker | swaylock |
+| File manager | Thunar |
+| Media | mpv |
+| Multiplexer | tmux |
+| Font | JetBrainsMono Nerd Font |
+| Icons | Papirus-Dark |
+| Cursor | Doro |
 
-## 📸 Overview
+## Layout
 
-* **OS:** [Arch Linux](https://archlinux.org/)
-* **WM:** [Sway](https://swaywm.org/) (i3-compatible Wayland compositor)
-* **Shell:** [Fish](https://fishshell.com/) with [Starship](https://starship.rs/)
-* **Terminal:** [Foot](https://codeberg.org/dnkl/foot) (lightweight, DPI-tuned Wayland terminal)
-* **Launcher:** [Fuzzel](https://codeberg.org/dnkl/fuzzel) (Wayland-native fuzzy application runner)
-* **Theming:** Dynamic wallpaper colors via [Pywal16](https://github.com/eylles/pywal16)
-* **Notifications:** [Mako](https://github.com/emersion/mako)
-* **OSD:** [SwayOSD](https://github.com/ErikReider/SwayOSD) (volume, brightness, mic overlay)
-* **Font:** JetBrains Mono Nerd Font
-* **Icons:** Papirus-Dark
-* **Cursor:** [Doro](https://github.com/rredwiz/doro-linux-cursors) (animated)
-
----
-
-## 📂 Repository Structure
-
-Managed declaratively with **[GNU Stow](https://www.gnu.org/software/stow/)**:
-
-```text
-dotfiles/
-├── bin/                       # Scripts in ~/.local/bin/ (menu-launcher, pick-fuzzel)
-├── environment/               # Wayland environment variables (~/.config/environment.d)
-├── fastfetch/                 # Fastfetch system info & ASCII art
-├── fish/                      # Fish shell config & aliases
-├── foot/                      # Foot terminal emulator config
-├── fuzzel/                    # Fuzzel application launcher config
-├── git/                       # Git user configuration
-├── gtk/                       # GTK 2/3/4 settings (Adwaita Dark + Papirus)
-├── pkg-lists/                 # Pacman, AUR, and Flatpak package backups
-├── starship/                  # Clean Starship prompt
-├── sway/                      # Modular Sway configs & desktop helper scripts
-├── thunar/                    # Thunar file manager custom actions
-├── tmux/                      # Minimalist 45-line Tmux configuration
-├── wal/                       # Pywal color templates (SSOT for dynamic theming)
-├── xdg/                       # Default MIME associations & user directories
-├── xdg-desktop-portal-wlr/    # Portal configuration for screen sharing
-└── install.sh                 # Single-command Stow deployment script
+```
+bin/                    scripts installed to ~/.local/bin
+  menu-launcher         fuzzel launcher with flatpak data dirs
+  pick-fuzzel           shared dmenu wrapper for every picker
+  sway-output-toggle    move focus or a window to the other display
+  window-switcher       fuzzel window list
+fastfetch/              login info and logo
+fish/                   shell config, aliases, flatpak dirs
+foot/                   terminal
+fuzzel/                 launcher appearance
+git/                    git identity and defaults
+gtk/                    GTK3/GTK4 settings
+mpv/                    video player
+pkg-lists/              installed package snapshots
+starship/               prompt
+sway/                   Sway config and helper scripts
+thunar/                 Thunar settings and context menu actions
+tmux/                   tmux config
+wal/                    pywal templates for every themed program
+xdg/                    MIME defaults, user dirs, fontconfig, Wayland env
+xdg-desktop-portal-wlr/ screen sharing portal
+install.sh              stow wrapper
 ```
 
----
-
-## 🎨 Dynamic Wallpaper Theming
-
-Wallpaper changes dynamically re-theme the desktop using Pywal templates:
-
-* **Sway WM borders & bar** (`colors-sway`)
-* **Foot Terminal** (`colors-foot.ini`)
-* **Fuzzel Launcher** (`colors-fuzzel.ini`)
-* **Mako Notifications** (`colors-mako`)
-* **Swaylock** (`colors-swaylock` + frosted blurred wallpaper backdrop)
-* **SwayOSD** (`style-swayosd.css`)
-
-### Switching Wallpaper
-
-Press `$mod+Shift+w` to open the wallpaper picker with live preview, or run:
-
-```bash
-~/.config/sway/scripts/wal-theme.sh -i /path/to/image.jpg
-```
-
----
-
-## 🖥️ Workspace Layout
-
-Workspaces are pinned per display with automatic fallback:
-
-* **1–6:** external monitor (`HDMI-A-2`), falls back to laptop panel
-* **7–10:** laptop panel (`eDP-1`), falls back to external monitor
-
-Single-monitor setups keep working without config edits — Sway moves
-pinned workspaces to whichever output is available.
-
----
-
-## 🚀 Installation
-
-### 1. Prerequisites
-
-Make sure you have `git` and `stow` installed:
-
-```bash
-sudo pacman -S git stow
-```
-
-### 2. Clone and Deploy
+## Install
 
 ```bash
 git clone https://github.com/shironxn/dotfiles.git ~/dotfiles
@@ -100,31 +56,131 @@ cd ~/dotfiles
 ./install.sh
 ```
 
-`install.sh` uses `stow` to symlink all configurations to your `$HOME` directory.
+`install.sh` links each package into `$HOME` with `stow -R`. Existing files
+that are not part of the repo are left alone; a conflict means the same path
+already exists and has to be moved aside first.
 
----
+## Requirements
 
-## ⌨️ Essential Keybindings
+`pkg-lists/pacman-explicit.txt` is the full snapshot. The packages the config
+actually calls:
 
-| Keybinding | Action |
+```bash
+sudo pacman -S sway swaylock swayosd foot fuzzel fish starship tmux \
+  thunar mako wl-clipboard cliphist grim slurp wf-recorder brightnessctl \
+  playerctl pipewire wireplumber networkmanager jq imagemagick ddcutil \
+  papirus-icon-theme ttf-jetbrains-mono-nerd polkit-gnome mpv \
+  ffmpegthumbnailer xdg-desktop-portal-wlr eza bat fastfetch
+yay -S python-pywal16
+```
+
+mpv is the default handler for video and audio, File Roller for archives,
+Evince for PDF. The Doro cursor theme is installed into
+`~/.local/share/icons/Doro`.
+
+## Keybindings
+
+`Super` is the Mod4 key.
+
+### Basics
+
+| Key | Action |
 |---|---|
-| `Super + Enter` | Open Terminal (`foot`) |
-| `Super + d` | App Launcher (`fuzzel`) |
-| `Super + Tab` | Window Switcher (`fuzzel`) |
-| `Super + Shift + q` | Close focused window |
-| `Super + Shift + s` or `Print` | Interactive Screenshot (`slurp` + `grim`) |
-| `Super + Shift + r` | Screen Recorder toggle (`wf-recorder`, saves to `~/videos/recordings/`) |
-| `Super + Shift + w` | Wallpaper Picker (GTK3 preview + Pywal) |
-| `Super + Shift + v` | Clipboard History (`cliphist`) |
-| `Super + Shift + BackSpace` | Lock Screen (`swaylock`) |
-| `Super + Shift + Delete` | Power Menu (Logout, Suspend, Reboot, Shutdown) |
-| `Super + /` | Searchable Keybindings Cheatsheet |
-| `Super + b` / `Super + v` | Split Horizontal / Vertical |
-| `Super + f` | Toggle Fullscreen |
-| `Super + Shift + Space` | Toggle Floating |
+| `Super+Return` | terminal |
+| `Super+d` | application launcher |
+| `Super+Tab` | window switcher |
+| `Super+Shift+q` | close window |
+| `Super+Shift+c` | reload config |
+| `Super+Shift+e` | exit Sway |
+| `Super+/` | keybinding cheatsheet |
 
----
+### Utilities
 
-## 📜 License
+| Key | Action |
+|---|---|
+| `Super+Shift+s`, `Print` | screenshot (area, window, or display) |
+| `Super+Shift+r` | screen recorder (area, window, or display) |
+| `Super+Shift+w` | wallpaper picker |
+| `Super+Shift+v` | clipboard history |
+| `Super+Alt+v` | clear clipboard history |
+| `Super+Shift+BackSpace` | lock screen |
+| `Super+Shift+Delete` | power menu |
 
-MIT © [shironxn](https://github.com/shironxn)
+### Window
+
+| Key | Action |
+|---|---|
+| `Super+h/j/k/l`, `Super+arrows` | move focus |
+| `Super+Shift+h/j/k/l` | move window |
+| `Super+o` | focus the other display |
+| `Super+Shift+o` | move window to the other display |
+| `Super+b`, `Super+v` | split horizontal, vertical |
+| `Super+s`, `Super+w`, `Super+e` | stacking, tabbed, toggle split |
+| `Super+f` | fullscreen |
+| `Super+Shift+space` | toggle floating |
+| `Super+p` | floating and sticky |
+| `Super+space` | toggle focus between tiling and floating |
+| `Super+a` | focus parent |
+| `Super+r` then `h/j/k/l` | resize |
+| `Super+Shift+minus`, `Super+minus` | send to scratchpad, show scratchpad |
+
+### Workspaces
+
+`Super+1..0` switches workspace, `Super+Shift+1..0` moves the focused window
+to it.
+
+### Hardware keys
+
+Volume, mute, microphone mute, brightness, keyboard backlight, and media
+playback are bound to the XF86 keys.
+
+## Theming
+
+Changing the wallpaper runs `sway/.config/sway/scripts/wal-theme.sh`, which
+calls pywal and reloads everything that reads the palette:
+
+| Target | Template | Applies to |
+|---|---|---|
+| `colors-sway` | Sway variables | borders, bar, workspace colors |
+| `colors-foot.ini` | foot | terminal palette |
+| `colors-fuzzel.ini` | fuzzel | launcher |
+| `colors-mako` | mako | notifications |
+| `colors-gtk.css` | GTK3 | GTK apps and Thunar |
+| `colors-swaylock` | swaylock | lock screen |
+| `style-swayosd.css` | SwayOSD | volume and brightness overlay |
+
+The lock screen uses a blurred, darkened copy of the wallpaper
+(`~/.cache/wal/bg-lock.jpg`) generated by the same script.
+
+## Displays
+
+Both outputs run at scale 1.0 with RGB subpixel rendering. Workspaces 1-6 are
+pinned to `HDMI-A-2` and 7-10 to `eDP-1`, each with the other output as a
+fallback, so a single-display setup still works.
+
+## Status bar
+
+`sway/.config/sway/scripts/status.sh` prints one line:
+
+```
+REC 00:42  │  󰎆 Artist - Title  │  󰔏 54°C · 󰍛 8.2G  │  󰖩 · 󰖀 45% · 󰍭 · 󰂀 78%  │  󰃭 28 Oct · 19:51
+```
+
+Recording state and now-playing are on the left so their text grows and
+shrinks without moving the hardware, peripheral, and clock sections. Each
+value is cached in `/tmp` for 3-60 seconds; the bar refreshes every second
+only while recording.
+
+## Notes
+
+Some config is specific to this machine and can be dropped when reusing the
+repo elsewhere:
+
+- `sway/.config/sway/config.d/input.conf`: the NACODEX wireless dongle repeats
+  a brightness key, so two of its interfaces are disabled.
+- `sway/.config/sway/config.d/output.conf`, `workspaces.conf`,
+  `sway-output-toggle`: output names `eDP-1` and `HDMI-A-2`.
+- `sway/.config/sway/config.d/wacom.conf`: maps a Wacom tablet to `HDMI-A-2`.
+- `sway/.config/sway/scripts/brightness-switch.sh`: uses `ddcutil` for the
+  external monitor.
+- `xdg/.config/mimeapps.list`: defaults include Brave and Sober.
