@@ -13,3 +13,6 @@ fish/.config/fish/fish_variables
 
 # Local secrets (API keys, personal tokens)
 fish/.config/fish/conf.d/secrets.fish
+
+# Machine-specific Sway configuration
+sway/.config/sway/host.conf

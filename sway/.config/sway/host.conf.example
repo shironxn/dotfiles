@@ -1,0 +1,51 @@
+# Machine-specific Sway configuration
+# Copy this file to ~/.config/sway/host.conf to apply machine-local settings.
+# Changes in host.conf take precedence over the defaults in config.d/*.conf.
+
+# --- Displays ---
+# Arrange outputs and set custom scaling or subpixel layouts.
+# Find output names with: swaymsg -t get_outputs | jq -r '.[].name'
+#
+# output eDP-1 scale 1.0 subpixel rgb position 1920 0
+# output HDMI-A-2 scale 1.0 subpixel rgb position 0 0
+
+# --- Workspace Pinning ---
+# Pin workspaces to specific outputs, with a fallback output.
+#
+# workspace 1 output HDMI-A-2 eDP-1
+# workspace 2 output HDMI-A-2 eDP-1
+# workspace 3 output HDMI-A-2 eDP-1
+# workspace 4 output HDMI-A-2 eDP-1
+# workspace 5 output HDMI-A-2 eDP-1
+# workspace 6 output HDMI-A-2 eDP-1
+# workspace 7 output eDP-1 HDMI-A-2
+# workspace 8 output eDP-1 HDMI-A-2
+# workspace 9 output eDP-1 HDMI-A-2
+# workspace 10 output eDP-1 HDMI-A-2
+
+# --- Input Devices ---
+# Configure specific mice, keyboards, or hardware workarounds.
+# Find device identifiers with: swaymsg -t get_inputs
+#
+# input "2362:9520:PixArt_Gaming_Mouse" {
+#     accel_profile flat
+#     pointer_accel 0
+# }
+#
+# # Disable misbehaving input interfaces (e.g. wireless dongles that emit phantom keys):
+# input "43173:8551:YJX-CHIP_NACODEX_2.4G" {
+#     events disabled
+# }
+# input "43173:8551:YJX-CHIP_NACODEX_2.4G_Keyboard" {
+#     events disabled
+# }
+
+# --- Graphics Tablets ---
+# Map drawing tablets or pens to a specific display.
+#
+# input "1386:890:Wacom_One_by_Wacom_S_Pen" {
+#     map_to_output HDMI-A-2
+# }
+# input type:tablet_tool {
+#     map_to_output HDMI-A-2
+# }

@@ -34,3 +34,4 @@ font pango:JetBrainsMono Nerd Font 13
 include ~/.cache/wal/colors-sway
 include ~/.config/sway/config.d/*.conf
 include /etc/sway/config.d/*
+include ~/.config/sway/host.conf
