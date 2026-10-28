@@ -16,6 +16,11 @@ fresh() {
   [ "$age" -lt "$2" ]
 }
 
+# put <file> <value>: atomic write, so a reader never sees a half-written cache.
+put() {
+  printf '%s\n' "$2" > "$1.$$" && mv -f "$1.$$" "$1"
+}
+
 while true; do
   # Recording timer
   rec_str=""
@@ -29,26 +34,22 @@ while true; do
   fi
 
   # CPU temperature
-  if fresh "$TEMP_CACHE" 30; then
-    temp_str=$(cat "$TEMP_CACHE")
-  else
-    raw=$(head -n1 /sys/class/thermal/thermal_zone*/temp 2>/dev/null || echo 0)
+  temp_str=$(cat "$TEMP_CACHE" 2>/dev/null)
+  if ! fresh "$TEMP_CACHE" 30 || [ -z "$temp_str" ]; then
+    raw=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)
     temp_str="󰔏 $((raw / 1000))°C"
-    echo "$temp_str" > "$TEMP_CACHE"
+    put "$TEMP_CACHE" "$temp_str"
   fi
 
   # RAM
   ram_str=$(free -h | awk '/^Mem:/ { used=$3; sub(/i$/, "", used); printf "󰍛 %s", used }')
 
   # Package updates (1h cache, refreshed in the background)
-  if fresh "$UPDATES_CACHE" 3600; then
-    updates=$(cat "$UPDATES_CACHE")
-  else
-    updates=$(cat "$UPDATES_CACHE" 2>/dev/null || echo 0)
-    if [ ! -f "$UPDATES_CACHE.lock" ]; then
-      : > "$UPDATES_CACHE.lock"
-      (checkupdates 2>/dev/null | wc -l > "$UPDATES_CACHE"; rm -f "$UPDATES_CACHE.lock") &
-    fi
+  updates=$(cat "$UPDATES_CACHE" 2>/dev/null)
+  updates=${updates:-0}
+  if ! fresh "$UPDATES_CACHE" 3600 && [ ! -f "$UPDATES_CACHE.lock" ]; then
+    : > "$UPDATES_CACHE.lock"
+    (put "$UPDATES_CACHE" "$(checkupdates 2>/dev/null | wc -l)"; rm -f "$UPDATES_CACHE.lock") &
   fi
 
   sys_str="${temp_str} · ${ram_str}"
@@ -58,26 +59,24 @@ while true; do
   if fresh "$NP_CACHE" 5; then
     np=$(cat "$NP_CACHE")
   else
-    np=$(timeout 1.5 playerctl metadata --format '󰎆 {{artist}} - {{title}}' 2>/dev/null | head -c 42)
-    echo "$np" > "$NP_CACHE"
+    np=$(timeout 1.5 playerctl metadata --format '󰎆 {{artist}} - {{title}}' 2>/dev/null | cut -c1-42)
+    put "$NP_CACHE" "$np"
   fi
 
   # WiFi
-  if fresh "$WIFI_CACHE" 20; then
-    wifi=$(cat "$WIFI_CACHE")
-  else
+  wifi=$(cat "$WIFI_CACHE" 2>/dev/null)
+  if ! fresh "$WIFI_CACHE" 20 || [ -z "$wifi" ]; then
     if nmcli -t -f active,ssid dev wifi 2>/dev/null | grep -q '^yes'; then
       wifi="󰖩"
     else
       wifi="󰖪"
     fi
-    echo "$wifi" > "$WIFI_CACHE"
+    put "$WIFI_CACHE" "$wifi"
   fi
 
   # Output volume
-  if fresh "$VOL_CACHE" 5; then
-    vol_str=$(cat "$VOL_CACHE")
-  else
+  vol_str=$(cat "$VOL_CACHE" 2>/dev/null)
+  if ! fresh "$VOL_CACHE" 5 || [ -z "$vol_str" ]; then
     if pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q 'Mute: yes'; then
       vol_str="󰖁"
     else
@@ -93,7 +92,7 @@ while true; do
         vol_str="󰕾 ${level}%"
       fi
     fi
-    echo "$vol_str" > "$VOL_CACHE"
+    put "$VOL_CACHE" "$vol_str"
   fi
 
   # Microphone mute, shown only when muted
@@ -103,9 +102,9 @@ while true; do
   else
     if pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null | grep -qi 'yes'; then
       mic_str=" · 󰍭"
-      echo "1" > "$MIC_CACHE"
+      put "$MIC_CACHE" 1
     else
-      echo "0" > "$MIC_CACHE"
+      put "$MIC_CACHE" 0
     fi
   fi
 
