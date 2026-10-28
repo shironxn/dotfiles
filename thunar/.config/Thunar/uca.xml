@@ -17,7 +17,7 @@
 	<name>Set as Wallpaper</name>
 	<submenu></submenu>
 	<unique-id>2-set-as-wallpaper</unique-id>
-	<command>/home/shironxn/.config/sway/scripts/wal-theme.sh -i %f</command>
+	<command>sh -c 'exec ~/.config/sway/scripts/wal-theme.sh -i "$1"' sh %f</command>
 	<description>Set image as wallpaper and update Pywal theme</description>
 	<range></range>
 	<patterns>*.png;*.jpg;*.jpeg;*.webp;*.PNG;*.JPG;*.JPEG;*.WEBP</patterns>
@@ -40,7 +40,7 @@
 	<name>Copy File Path</name>
 	<submenu></submenu>
 	<unique-id>4-copy-file-path</unique-id>
-	<command>echo -n %f | wl-copy</command>
+	<command>sh -c 'printf %s "$1" | wl-copy' sh %f</command>
 	<description>Copy path to clipboard</description>
 	<range></range>
 	<patterns>*</patterns>
