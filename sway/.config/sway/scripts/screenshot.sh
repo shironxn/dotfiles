@@ -4,7 +4,7 @@ set -eu
 
 dir="$HOME/pictures/screenshots"
 mkdir -p "$dir"
-file="$dir/$(date +'%Y-%m-%d_%H-%M-%S')"
+file="$dir/$(date +'%Y-%m-%d_%H-%M-%S_%3N')"
 
 # Pywal styling for slurp selection
 slurp_args=""
