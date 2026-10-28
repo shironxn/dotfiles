@@ -40,8 +40,10 @@ git/                    git identity and defaults
 gtk/                    GTK3/GTK4 settings
 mpv/                    video player
 pkg-lists/              installed package snapshots
+pipewire/               audio quirks for browsers and voice apps
 starship/               prompt
 sway/                   Sway config and helper scripts
+systemd/                user units (failure notifications, wakatime updater)
 thunar/                 Thunar settings and context menu actions
 tmux/                   tmux config
 wal/                    pywal templates for every themed program

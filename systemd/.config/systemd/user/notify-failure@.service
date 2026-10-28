@@ -1,0 +1,6 @@
+[Unit]
+Description=Notify when unit %i fails
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/notify-failure.sh %i
