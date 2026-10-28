@@ -57,7 +57,7 @@ Wallpaper changes dynamically re-theme the desktop using Pywal templates:
 * **Foot Terminal** (`colors-foot.ini`)
 * **Fuzzel Launcher** (`colors-fuzzel.ini`)
 * **Mako Notifications** (`colors-mako`)
-* **Swaylock** (`colors-swaylock`)
+* **Swaylock** (`colors-swaylock` + frosted blurred wallpaper backdrop)
 * **SwayOSD** (`style-swayosd.css`)
 
 ### Switching Wallpaper
@@ -67,6 +67,18 @@ Press `$mod+Shift+w` to open the wallpaper picker with live preview, or run:
 ```bash
 ~/.config/sway/scripts/wal-theme.sh -i /path/to/image.jpg
 ```
+
+---
+
+## 🖥️ Workspace Layout
+
+Workspaces are pinned per display with automatic fallback:
+
+* **1–6:** external monitor (`HDMI-A-2`), falls back to laptop panel
+* **7–10:** laptop panel (`eDP-1`), falls back to external monitor
+
+Single-monitor setups keep working without config edits — Sway moves
+pinned workspaces to whichever output is available.
 
 ---
 
@@ -101,6 +113,7 @@ cd ~/dotfiles
 | `Super + Tab` | Window Switcher (`fuzzel`) |
 | `Super + Shift + q` | Close focused window |
 | `Super + Shift + s` or `Print` | Interactive Screenshot (`slurp` + `grim`) |
+| `Super + Shift + r` | Screen Recorder toggle (`wf-recorder`, saves to `~/videos/recordings/`) |
 | `Super + Shift + w` | Wallpaper Picker (GTK3 preview + Pywal) |
 | `Super + Shift + v` | Clipboard History (`cliphist`) |
 | `Super + Shift + BackSpace` | Lock Screen (`swaylock`) |

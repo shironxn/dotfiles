@@ -17,6 +17,7 @@ mkdir -p "$HOME/.config" "$HOME/.local/bin"
 echo "==> [2/3] Setting script permissions..."
 chmod +x bin/.local/bin/* 2>/dev/null || true
 chmod +x sway/.config/sway/scripts/* 2>/dev/null || true
+mkdir -p "$HOME/pictures/screenshots" "$HOME/videos/recordings"
 
 # Packages to stow
 PACKAGES=(
