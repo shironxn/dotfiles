@@ -45,6 +45,13 @@ if [ -f "$WAL_DIR/wal" ]; then
   magick "$wallpaper" -scale 1920x1080^ -gravity center -extent 1920x1080 \
     -filter Gaussian -blur 0x8 -fill black -colorize 40% \
     "$WAL_DIR/bg-lock.jpg" 2>/dev/null || true
+  # swaylock does not expand ~ in config values, so patch the path into the
+  # generated file itself. sed -i replaces the inode, which would break the
+  # symlink we just created.
+  if [ -f "$WAL_DIR/colors-swaylock" ]; then
+    sed -i '\|^image=|d' "$WAL_DIR/colors-swaylock"
+    printf 'image=%s\n' "$WAL_DIR/bg-lock.jpg" >>"$WAL_DIR/colors-swaylock"
+  fi
 fi
 
 if [ "$restore" -eq 0 ]; then

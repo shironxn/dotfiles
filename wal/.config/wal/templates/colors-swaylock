@@ -11,7 +11,6 @@ indicator-thickness=7
 line-uses-inside
 separator-color=00000000
 
-image=/home/shironxn/.cache/wal/bg-lock.jpg
 scaling=fill
 
 ring-color={color4.strip}ee
