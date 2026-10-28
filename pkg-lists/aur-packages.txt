@@ -1,6 +1,0 @@
-brave-bin
-python-pywal16
-rasdaemon
-spicetify-cli
-thinkfan
-yay
