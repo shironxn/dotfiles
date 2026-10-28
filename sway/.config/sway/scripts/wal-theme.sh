@@ -42,7 +42,11 @@ killall -USR1 foot 2>/dev/null || true
 if [ -f "$WAL_DIR/wal" ]; then
   wallpaper=$(cat "$WAL_DIR/wal")
   ln -sf "$wallpaper" "$WAL_DIR/bg"
-  magick "$wallpaper" -scale 1920x1080^ -gravity center -extent 1920x1080 \
+  res=$(swaymsg -t get_outputs 2>/dev/null | jq -r '
+    [.[] | select(.active) | .rect] | max_by(.width * .height) | "\(.width)x\(.height)"
+  ' 2>/dev/null || true)
+  res="${res:-1920x1080}"
+  magick "$wallpaper" -scale "${res}^" -gravity center -extent "$res" \
     -filter Gaussian -blur 0x8 -fill black -colorize 40% \
     "$WAL_DIR/bg-lock.jpg" 2>/dev/null || true
   # swaylock does not expand ~ in config values, so patch the path into the

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Brightness: internal panel through swayosd, external monitor through ddcutil.
+# Brightness control: internal panels via swayosd, external monitors via ddcutil.
 # Usage: brightness-switch.sh up|down [step]
 set -eu
 
@@ -9,27 +9,29 @@ up | down) ;;
 esac
 
 step="${2:-5}"
-output=$(swaymsg -t get_outputs | jq -r '.[] | select(.focused) | .name')
+output=$(swaymsg -t get_outputs 2>/dev/null | jq -r '.[] | select(.focused) | .name' 2>/dev/null || true)
 
-if [ "$output" = "eDP-1" ]; then
+# Internal laptop panels (eDP, LVDS, DSI) control hardware backlight directly
+case "$output" in
+eDP* | LVDS* | DSI* | "")
   if [ "$1" = "up" ]; then
-    swayosd-client --brightness raise --device intel_backlight
+    swayosd-client --brightness raise
   else
-    swayosd-client --brightness lower --device intel_backlight
+    swayosd-client --brightness lower
   fi
   exit 0
-fi
+  ;;
+esac
 
-[ "$output" = "HDMI-A-2" ] || exit 0
-
+# External monitors: communicate over I2C via DDC/CI
 if ! command -v ddcutil >/dev/null; then
   swayosd-client --custom-icon=display-brightness-symbolic --custom-message="ddcutil missing"
   exit 1
 fi
 
-CACHE="$HOME/.cache/brightness-hdmi"
+CACHE="$HOME/.cache/brightness-$output"
 read_level() {
-  ddcutil -d 1 getvcp 10 --brief 2>/dev/null | awk '{print $4}'
+  ddcutil getvcp 10 --brief 2>/dev/null | awk '{print $4}'
 }
 
 level=$(cat "$CACHE" 2>/dev/null || echo '')
@@ -38,7 +40,7 @@ if [ -n "$(find "$CACHE" -mmin +60 2>/dev/null)" ]; then
   level=$(read_level)
 fi
 if [ -z "$level" ]; then
-  swayosd-client --custom-icon=display-brightness-symbolic --custom-message="ddcutil read failed"
+  swayosd-client --custom-icon=display-brightness-symbolic --custom-message="DDC read failed"
   exit 1
 fi
 
@@ -51,6 +53,6 @@ else
 fi
 echo "$level" > "$CACHE"
 
-ddcutil --sleep-multiplier=0.5 -d 1 setvcp 10 "$level" >/dev/null 2>&1 &
+ddcutil --sleep-multiplier=0.5 setvcp 10 "$level" >/dev/null 2>&1 &
 swayosd-client --custom-progress="$(awk -v v="$level" 'BEGIN { printf "%.2f", v / 100 }')" \
   --custom-icon=display-brightness-symbolic

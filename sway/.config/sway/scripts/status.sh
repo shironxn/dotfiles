@@ -33,10 +33,21 @@ while true; do
     printf -v rec_str 'REC %02d:%02d' $((elapsed / 60)) $((elapsed % 60))
   fi
 
-  # CPU temperature
+  # CPU temperature: search for common package/core sensors, fallback to zone0
   temp_str=$(cat "$TEMP_CACHE" 2>/dev/null)
   if ! fresh "$TEMP_CACHE" 30 || [ -z "$temp_str" ]; then
-    raw=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)
+    raw=""
+    for z in /sys/class/thermal/thermal_zone*; do
+      type=$(cat "$z/type" 2>/dev/null || true)
+      case "$type" in
+        x86_pkg_temp | cpu* | k10temp | coretemp)
+          raw=$(cat "$z/temp" 2>/dev/null || true)
+          [ -n "$raw" ] && break
+          ;;
+      esac
+    done
+    [ -z "$raw" ] && raw=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)
+    raw=${raw:-0}
     temp_str="󰔏 $((raw / 1000))°C"
     put "$TEMP_CACHE" "$temp_str"
   fi
