@@ -1,8 +1,12 @@
 # dotfiles
 
-Sway desktop configuration for a ThinkPad X280 with an external 1080p monitor.
+Sway desktop configuration for a ThinkPad X280 with an external 1080p monitor:
+pywal colours, a minimal status bar, and no compositor-level animations.
 Managed with [GNU Stow](https://www.gnu.org/software/stow/) and themed with
 pywal16.
+
+Reusable as-is on another Arch install; the parts that are tied to this machine
+are listed under [What to change](#what-to-change).
 
 ## Stack
 
@@ -27,16 +31,16 @@ pywal16.
 
 ```
 bin/                    scripts installed to ~/.local/bin
-btop/                   system monitor
   menu-launcher         fuzzel launcher with flatpak data dirs
   pick-fuzzel           shared dmenu wrapper for every picker
   sway-output-toggle    move focus or a window to the other display
   window-switcher       fuzzel window list
+btop/                   system monitor
 fastfetch/              login info and logo
 fish/                   shell config, aliases, flatpak dirs
 foot/                   terminal
 fuzzel/                 launcher appearance
-git/                    git identity and defaults
+git/                    git defaults (identity is not tracked)
 gtk/                    GTK3/GTK4 settings
 mpv/                    video player
 pkg-lists/              installed package snapshots
@@ -50,7 +54,32 @@ wal/                    pywal templates for every themed program
 xdg/                    MIME defaults, user dirs, fontconfig, Wayland env
 xdg-desktop-portal-wlr/ screen sharing portal
 install.sh              stow wrapper
+LICENSE                 MIT
 ```
+
+## Requirements
+
+Packages the configuration actually calls:
+
+```bash
+sudo pacman -S sway swaybg swaylock swayosd foot fuzzel fish starship tmux \
+  thunar mako wl-clipboard cliphist grim slurp wf-recorder brightnessctl \
+  playerctl pipewire wireplumber networkmanager jq imagemagick ddcutil \
+  papirus-icon-theme ttf-jetbrains-mono-nerd polkit-gnome mpv \
+  ffmpegthumbnailer xdg-desktop-portal-wlr gnu-stow eza bat fastfetch
+yay -S python-pywal16
+```
+
+Two assets are not packaged and have to be installed by hand:
+
+- **Cursor**: the configs name `Doro`; put any XCursor theme in
+  `~/.local/share/icons/<name>` and change the name in `gtk-3.0/settings.ini`,
+  `gtk-4.0/settings.ini` and `~/.icons/default/index.theme`.
+- **Wallpapers**: `Super+Shift+w` lists `~/pictures/wallpapers`, which starts
+  empty.
+
+mpv is the default handler for video and audio, File Roller for archives,
+Evince for PDF.
 
 ## Install
 
@@ -60,27 +89,34 @@ cd ~/dotfiles
 ./install.sh
 ```
 
-`install.sh` links each package into `$HOME` with `stow -R`. Existing files
-that are not part of the repo are left alone; a conflict means the same path
-already exists and has to be moved aside first.
+`install.sh` links each package into `$HOME` with `stow -R`, then reports
+missing programs and the steps below. It never installs packages and never
+touches files it does not track.
 
-## Requirements
-
-`pkg-lists/pacman-explicit.txt` is the full snapshot. The packages the config
-actually calls:
+First run, so the desktop has a palette:
 
 ```bash
-sudo pacman -S sway swaylock swayosd foot fuzzel fish starship tmux \
-  thunar mako wl-clipboard cliphist grim slurp wf-recorder brightnessctl \
-  playerctl pipewire wireplumber networkmanager jq imagemagick ddcutil \
-  papirus-icon-theme ttf-jetbrains-mono-nerd polkit-gnome mpv \
-  ffmpegthumbnailer xdg-desktop-portal-wlr eza bat fastfetch
-yay -S python-pywal16
+wal -i ~/pictures/wallpapers/<your wallpaper>
+~/.config/sway/scripts/wal-theme.sh -R
 ```
 
-mpv is the default handler for video and audio, File Roller for archives,
-Evince for PDF. The Doro cursor theme is installed into
-`~/.local/share/icons/Doro`.
+Log out and back in, or run `swaymsg reload`.
+
+## What to change
+
+These parts assume this machine. Everything still works if you leave them, but
+you will want to edit them:
+
+| Path | Why |
+|---|---|
+| `sway/config.d/output.conf`, `workspaces.conf`, `bin/.../sway-output-toggle` | output names `eDP-1` and `HDMI-A-2`, and workspaces 1-6 on the external display |
+| `sway/config.d/input.conf` | a NACODEX wireless dongle repeats a brightness key, so two of its interfaces are disabled |
+| `sway/config.d/wacom.conf` | maps a Wacom tablet to `HDMI-A-2` |
+| `sway/scripts/brightness-switch.sh` | external brightness through `ddcutil` |
+| `xdg/.config/mimeapps.list` | defaults include Brave and Sober |
+| `git/.config/git/config` | defaults only; your identity stays in `~/.gitconfig` |
+| `fish/functions/piw.fish` | expects `~/workspace/{projects,c,vault}` and the `pi` agent |
+| `systemd/user/wakatime-cli-update.*` | only useful with WakaTime |
 
 ## Keybindings
 
@@ -140,8 +176,8 @@ playback are bound to the XF86 keys.
 
 ## Theming
 
-Changing the wallpaper runs `sway/.config/sway/scripts/wal-theme.sh`, which
-calls pywal and reloads everything that reads the palette:
+Changing the wallpaper runs `sway/scripts/wal-theme.sh`, which calls pywal and
+reloads everything that reads the palette:
 
 | Target | Template | Applies to |
 |---|---|---|
@@ -154,7 +190,8 @@ calls pywal and reloads everything that reads the palette:
 | `style-swayosd.css` | SwayOSD | volume and brightness overlay |
 
 The lock screen uses a blurred, darkened copy of the wallpaper
-(`~/.cache/wal/bg-lock.jpg`) generated by the same script.
+(`~/.cache/wal/bg-lock.jpg`) generated by the same script. btop uses its
+built-in `TTY` theme, so it follows the terminal palette without a template.
 
 ## Displays
 
@@ -164,10 +201,10 @@ fallback, so a single-display setup still works.
 
 ## Status bar
 
-`sway/.config/sway/scripts/status.sh` prints one line:
+`sway/scripts/status.sh` prints one line:
 
 ```
-REC 00:42  │  󰎆 Artist - Title  │  󰔏 54°C · 󰍛 8.2G  │  󰖩 · 󰖀 45% · 󰍭 · 󰂀 78%  │  󰃭 28 Oct · 19:51
+REC 00:42  │  󰎆 Artist - Title  │  󰔏 54°C · 󰍛 8.2G · 󰏗 13  │  󰖩 · 󰖀 45% · 󰍭 · 󰂀 78%  │  󰃭 28 Oct · 19:51
 ```
 
 Recording state and now-playing are on the left so their text grows and
@@ -177,14 +214,12 @@ only while recording.
 
 ## Notes
 
-Some config is specific to this machine and can be dropped when reusing the
-repo elsewhere:
+- `pkg-lists/` is a snapshot of this machine, not a requirement list.
+- `status.sh` reads `/sys/class/thermal/thermal_zone0/temp`; a machine with a
+  different thermal zone order shows the wrong sensor.
+- Screen recording captures desktop audio from the default sink monitor. The
+  microphone is not recorded.
 
-- `sway/.config/sway/config.d/input.conf`: the NACODEX wireless dongle repeats
-  a brightness key, so two of its interfaces are disabled.
-- `sway/.config/sway/config.d/output.conf`, `workspaces.conf`,
-  `sway-output-toggle`: output names `eDP-1` and `HDMI-A-2`.
-- `sway/.config/sway/config.d/wacom.conf`: maps a Wacom tablet to `HDMI-A-2`.
-- `sway/.config/sway/scripts/brightness-switch.sh`: uses `ddcutil` for the
-  external monitor.
-- `xdg/.config/mimeapps.list`: defaults include Brave and Sober.
+## License
+
+MIT. See [LICENSE](LICENSE).
