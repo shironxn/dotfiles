@@ -1,8 +1,8 @@
 # dotfiles
 
 Sway desktop configuration for a ThinkPad X280 with an external 1080p monitor.
-Managed with [GNU Stow](https://www.gnu.org/software/stow/), themed by
-[pywal16](https://github.com/eylles/pywal16).
+Managed with [GNU Stow](https://www.gnu.org/software/stow/) and themed with
+pywal16.
 
 ## Stack
 
