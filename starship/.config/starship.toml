@@ -1,5 +1,4 @@
-# Starship Prompt — Minimal & Clean
-# Colors: pywal-inspired dark theme
+# Starship prompt
 
 # ── Format: info bar → prompt ──
 format = """

@@ -5,7 +5,7 @@ set $down j
 set $up k
 set $right l
 set $term foot
-set $menu /home/shironxn/.local/bin/menu-launcher
+set $menu ~/.local/bin/menu-launcher
 
 # Window titles & tab typography
 font pango:JetBrainsMono Nerd Font 13
