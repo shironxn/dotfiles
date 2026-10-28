@@ -7,7 +7,7 @@ windows=$(swaymsg -t get_tree | jq -r '
 
 [ -z "$windows" ] && exit 0
 
-selected=$(echo "$windows" | cut -f1 | pick-fuzzel " switch to " -w 60 -l 12)
+selected=$(echo "$windows" | cut -f1 | pick-fuzzel " switch to " -w 65 -l 10)
 [ -z "$selected" ] && exit 0
 
 con_id=$(echo "$windows" | awk -F'\t' -v s="$selected" '$1 == s {print $2; exit}')

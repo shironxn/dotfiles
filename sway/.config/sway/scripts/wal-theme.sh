@@ -55,7 +55,7 @@ fi
 
 # GSettings sync
 gsettings set org.gnome.desktop.interface gtk-theme "adw-gtk3-dark" 2>/dev/null || true
-gsettings set org.gnome.desktop.interface font-name "JetBrainsMono Nerd Font 11" 2>/dev/null || true
+gsettings set org.gnome.desktop.interface font-name "JetBrainsMono Nerd Font 13" 2>/dev/null || true
 gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" 2>/dev/null || true
 gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark" 2>/dev/null || true
 gsettings set org.gnome.desktop.interface cursor-theme "Doro" 2>/dev/null || true
