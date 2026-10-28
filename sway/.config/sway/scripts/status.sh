@@ -1,152 +1,145 @@
 #!/bin/bash
-# Sway status bar — minimal, elegant & lightweight
+# Sway status bar. Sections: [REC] │ [MEDIA] │ [HARDWARE] │ [PERIPHERALS] │ [CLOCK]
 
-# ── Cache files ──
 TEMP_CACHE=/tmp/sway-cpu-temp
-VOL_CACHE=/tmp/sway-vol
-UPDATES_CACHE=/tmp/sway-updates
 NP_CACHE=/tmp/sway-nowplaying
 WIFI_CACHE=/tmp/sway-wifi
+VOL_CACHE=/tmp/sway-vol
+MIC_CACHE=/tmp/sway-mic-mute
+UPDATES_CACHE=/tmp/sway-updates
+REC_START=/tmp/sway-rec-start
+
+# fresh <file> <seconds>
+fresh() {
+  [ -f "$1" ] || return 1
+  local age=$(( $(date +%s) - $(stat -c %Y "$1" 2>/dev/null || echo 0) ))
+  [ "$age" -lt "$2" ]
+}
 
 while true; do
-  # ── 1. Recording Alert with Live Timer ──
+  # Recording timer
   rec_str=""
-  is_recording=0
+  sleep_for=3
   if pgrep -x wf-recorder >/dev/null; then
-    is_recording=1
-    rec_now=$(date +%s)
-    rec_start=$(cat /tmp/sway-rec-start 2>/dev/null || echo "$rec_now")
-    rec_elapsed=$((rec_now - rec_start))
-    rec_min=$((rec_elapsed / 60))
-    rec_sec=$((rec_elapsed % 60))
-    rec_timer=$(printf "%02d:%02d" "$rec_min" "$rec_sec")
-    rec_str="REC ${rec_timer}"
+    sleep_for=1
+    now=$(date +%s)
+    start=$(cat "$REC_START" 2>/dev/null || echo "$now")
+    elapsed=$((now - start))
+    printf -v rec_str 'REC %02d:%02d' $((elapsed / 60)) $((elapsed % 60))
   fi
 
-  # ── 2. System Hardware (CPU temp & RAM) ──
-  # CPU temperature (cached for 30s)
-  if [ -f "$TEMP_CACHE" ] && [ $(( $(date +%s) - $(stat -c %Y "$TEMP_CACHE" 2>/dev/null) )) -lt 30 ]; then
+  # CPU temperature
+  if fresh "$TEMP_CACHE" 30; then
     temp_str=$(cat "$TEMP_CACHE")
   else
-    temp_raw=$(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | head -1 || echo 0)
-    temp_c=$((temp_raw / 1000))
-    temp_str="󰔏 ${temp_c}°C"
+    raw=$(head -n1 /sys/class/thermal/thermal_zone*/temp 2>/dev/null || echo 0)
+    temp_str="󰔏 $((raw / 1000))°C"
     echo "$temp_str" > "$TEMP_CACHE"
   fi
 
-  # RAM usage
-  ram_str=$(free -h | awk '/^Mem:/ {
-    used=$3; sub(/i$/,"",used); printf "󰍛 %s", used
-  }')
+  # RAM
+  ram_str=$(free -h | awk '/^Mem:/ { used=$3; sub(/i$/, "", used); printf "󰍛 %s", used }')
 
-  # Package updates (cached for 1h, refreshes in background)
-  if [ -f "$UPDATES_CACHE" ] && [ $(( $(date +%s) - $(stat -c %Y "$UPDATES_CACHE" 2>/dev/null) )) -lt 3600 ]; then
+  # Package updates (1h cache, refreshed in the background)
+  if fresh "$UPDATES_CACHE" 3600; then
     updates=$(cat "$UPDATES_CACHE")
   else
     updates=$(cat "$UPDATES_CACHE" 2>/dev/null || echo 0)
-    updates=${updates:-0}
     if [ ! -f "$UPDATES_CACHE.lock" ]; then
       : > "$UPDATES_CACHE.lock"
-      ( count=$(checkupdates 2>/dev/null | wc -l); echo "$count" > "$UPDATES_CACHE"; rm -f "$UPDATES_CACHE.lock" ) &
+      (checkupdates 2>/dev/null | wc -l > "$UPDATES_CACHE"; rm -f "$UPDATES_CACHE.lock") &
     fi
   fi
 
   sys_str="${temp_str} · ${ram_str}"
   [ "$updates" -gt 0 ] && sys_str="${sys_str} · 󰏗 ${updates}"
 
-  # ── 3. Media (Now Playing, cached for 5s) ──
-  if [ -f "$NP_CACHE" ] && [ $(( $(date +%s) - $(stat -c %Y "$NP_CACHE" 2>/dev/null) )) -lt 5 ]; then
+  # Now playing
+  if fresh "$NP_CACHE" 5; then
     np=$(cat "$NP_CACHE")
   else
     np=$(timeout 1.5 playerctl metadata --format '󰎆 {{artist}} - {{title}}' 2>/dev/null | head -c 42)
     echo "$np" > "$NP_CACHE"
   fi
 
-  # ── 4. Peripherals & Network ──
-  # WiFi (cached for 20s)
-  if [ -f "$WIFI_CACHE" ] && [ $(( $(date +%s) - $(stat -c %Y "$WIFI_CACHE" 2>/dev/null) )) -lt 20 ]; then
-    wifi_icon=$(cat "$WIFI_CACHE")
+  # WiFi
+  if fresh "$WIFI_CACHE" 20; then
+    wifi=$(cat "$WIFI_CACHE")
   else
-    wifi_connected=$(nmcli -t -f active,ssid dev wifi 2>/dev/null | grep -c "^yes")
-    [ "$wifi_connected" -gt 0 ] && wifi_icon="󰖩" || wifi_icon="󰖪"
-    echo "$wifi_icon" > "$WIFI_CACHE"
+    if nmcli -t -f active,ssid dev wifi 2>/dev/null | grep -q '^yes'; then
+      wifi="󰖩"
+    else
+      wifi="󰖪"
+    fi
+    echo "$wifi" > "$WIFI_CACHE"
   fi
 
-  # Volume (cached for 5s, dynamic volume icon)
-  if [ -f "$VOL_CACHE" ] && [ $(( $(date +%s) - $(stat -c %Y "$VOL_CACHE" 2>/dev/null) )) -lt 5 ]; then
+  # Output volume
+  if fresh "$VOL_CACHE" 5; then
     vol_str=$(cat "$VOL_CACHE")
   else
-    if pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q "Mute: yes"; then
+    if pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q 'Mute: yes'; then
       vol_str="󰖁"
     else
-      vol_num=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -oP '\d+%' | head -1 | tr -d '%')
-      vol_num=${vol_num:-0}
-      if [ "$vol_num" -eq 0 ]; then
+      level=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -oP '\d+%' | head -n1 | tr -d '%')
+      level=${level:-0}
+      if [ "$level" -eq 0 ]; then
         vol_str="󰖁"
-      elif [ "$vol_num" -lt 34 ]; then
-        vol_str="󰕿 ${vol_num}%"
-      elif [ "$vol_num" -lt 67 ]; then
-        vol_str="󰖀 ${vol_num}%"
+      elif [ "$level" -lt 34 ]; then
+        vol_str="󰕿 ${level}%"
+      elif [ "$level" -lt 67 ]; then
+        vol_str="󰖀 ${level}%"
       else
-        vol_str="󰕾 ${vol_num}%"
+        vol_str="󰕾 ${level}%"
       fi
     fi
     echo "$vol_str" > "$VOL_CACHE"
   fi
 
-  # Microphone Mute (contextual: only shown when muted, cached 3s)
+  # Microphone mute, shown only when muted
   mic_str=""
-  if [ -f "/tmp/sway-mic-mute" ] && [ $(( $(date +%s) - $(stat -c %Y "/tmp/sway-mic-mute" 2>/dev/null) )) -lt 3 ]; then
-    [ "$(cat /tmp/sway-mic-mute 2>/dev/null)" = "1" ] && mic_str=" · 󰍭"
+  if fresh "$MIC_CACHE" 3; then
+    [ "$(cat "$MIC_CACHE")" = "1" ] && mic_str=" · 󰍭"
   else
     if pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null | grep -qi 'yes'; then
       mic_str=" · 󰍭"
-      echo "1" > /tmp/sway-mic-mute
+      echo "1" > "$MIC_CACHE"
     else
-      echo "0" > /tmp/sway-mic-mute
+      echo "0" > "$MIC_CACHE"
     fi
   fi
 
-  # Battery (dynamic tiered icon & charging status)
+  # Battery
   battery=$(cat /sys/class/power_supply/BAT0/capacity 2>/dev/null || echo 0)
-  charge=$(cat /sys/class/power_supply/BAT0/status 2>/dev/null || echo "?")
-  case "$charge" in
-    Charging) bat_icon="󰂄" ;;
-    *)
-      if [ "$battery" -ge 90 ]; then bat_icon="󰁹"
-      elif [ "$battery" -ge 70 ]; then bat_icon="󰂀"
-      elif [ "$battery" -ge 50 ]; then bat_icon="󰁾"
-      elif [ "$battery" -ge 30 ]; then bat_icon="󰁼"
-      elif [ "$battery" -ge 15 ]; then bat_icon="󰁺"
-      else bat_icon="󰂃"; fi
-      ;;
-  esac
-  bat_str="${bat_icon} ${battery}%"
+  charge=$(cat /sys/class/power_supply/BAT0/status 2>/dev/null || echo '')
+  if [ "$charge" = "Charging" ]; then
+    bat_icon="󰂄"
+  elif [ "$battery" -ge 90 ]; then
+    bat_icon="󰁹"
+  elif [ "$battery" -ge 70 ]; then
+    bat_icon="󰂀"
+  elif [ "$battery" -ge 50 ]; then
+    bat_icon="󰁾"
+  elif [ "$battery" -ge 30 ]; then
+    bat_icon="󰁼"
+  elif [ "$battery" -ge 15 ]; then
+    bat_icon="󰁺"
+  else
+    bat_icon="󰂃"
+  fi
 
-  # Keyboard backlight (optional indicator)
-  kbd_val=$(cat /sys/class/leds/tpacpi::kbd_backlight/brightness 2>/dev/null || echo 0)
-  [ "$kbd_val" -gt 0 ] && kbd_str=" · 󰌌" || kbd_str=""
+  # Keyboard backlight
+  kbd_str=""
+  kbd=$(cat /sys/class/leds/tpacpi::kbd_backlight/brightness 2>/dev/null || echo 0)
+  [ "$kbd" -gt 0 ] && kbd_str=" · 󰌌"
 
-  peri_str="${wifi_icon} · ${vol_str}${mic_str} · ${bat_str}${kbd_str}"
-
-  # ── 5. Date & Time ──
+  peri_str="${wifi} · ${vol_str}${mic_str} · ${bat_icon} ${battery}%${kbd_str}"
   clock_str="󰃭 $(date +'%d %b · %H:%M')"
 
-  # ── 6. Assemble Final Bar ──
-  # Layout order: [REC] │ [MEDIA] │ [SYSTEM] │ [PERIPHERALS] │ [DATE/TIME]
-  # Transient items (REC & MEDIA) expand to the left/center, keeping
-  # hardware, peripherals, and clock rock-solid on the right.
   out=""
-  [ -n "$rec_str" ] && out="${out}${rec_str}  │  "
-  [ -n "$np" ]      && out="${out}${np}  │  "
-  out="${out}${sys_str}  │  ${peri_str}  │  ${clock_str}"
+  [ -n "$rec_str" ] && out="${rec_str}  │  "
+  [ -n "$np" ] && out="${out}${np}  │  "
+  echo "${out}${sys_str}  │  ${peri_str}  │  ${clock_str}"
 
-  echo "$out"
-
-  # 1s refresh when recording for live timer, otherwise 3s
-  if [ "$is_recording" -eq 1 ]; then
-    sleep 1
-  else
-    sleep 3
-  fi
+  sleep "$sleep_for"
 done
