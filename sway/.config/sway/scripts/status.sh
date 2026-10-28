@@ -77,12 +77,12 @@ while true; do
     vol_str=$(cat "$VOL_CACHE")
   else
     if pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q "Mute: yes"; then
-      vol_str="󰖁 MUTE"
+      vol_str="󰖁"
     else
       vol_num=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -oP '\d+%' | head -1 | tr -d '%')
       vol_num=${vol_num:-0}
       if [ "$vol_num" -eq 0 ]; then
-        vol_str="󰖁 0%"
+        vol_str="󰖁"
       elif [ "$vol_num" -lt 34 ]; then
         vol_str="󰕿 ${vol_num}%"
       elif [ "$vol_num" -lt 67 ]; then
