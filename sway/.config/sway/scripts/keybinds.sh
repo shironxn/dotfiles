@@ -101,4 +101,4 @@ function icon(h) {
   gsub(/\$right/, "l", combo)
   printf "  %-21s %s\n", combo, label(cmd)
 }
-' "$CONF" | pick-fuzzel " keybinds " -w 100 -l 28 >/dev/null
+' "$CONF" | pick-fuzzel " keybinds " -w 75 -l 20 >/dev/null

@@ -21,4 +21,4 @@ prompt="${1:-}"
 # something to show.
 [ -n "$prompt" ] && set -- -p "$prompt" "$@"
 
-exec fuzzel -d -i "$@"
+exec fuzzel -d -i --minimal-lines "$@"
