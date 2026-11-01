@@ -65,7 +65,7 @@ con_rect() {
 
 place_panel() {
     local con=$1
-    local x y w ox oy width height got gx gy
+    local x y tx ty w ox oy width height got gx gy gw gh offx offy
 
     # Focused output geometry, so the panel lands on the screen in use.
     read -r ox oy w _ < <(
@@ -77,29 +77,37 @@ place_panel() {
 
     width=$PANEL_WIDTH
     height=$PANEL_HEIGHT
-    x=$((ox + w - width - MARGIN))
-    y=$((oy + BAR_HEIGHT + MARGIN))
+    tx=$((ox + w - width - MARGIN))
+    ty=$((oy + BAR_HEIGHT + MARGIN))
 
-    # Telegram re-applies its saved call panel geometry right after showing the
-    # window, which beats the first resize. Re-assert until it sticks.
-    #
     # sway offsets a floating window's rect from the requested position (border
-    # + bar). Probe the offset once and apply its inverse, instead of correcting
-    # in the loop: a stale rect read there would compound the correction.
-    apply_panel "$con" "$width" "$height" "$x" "$y"
+    # + bar). Measure that offset from a probe, then send target-minus-offset so
+    # the window lands on the target.
+    #
+    # Target and request must stay separate: the request always yields
+    # request+offset, so comparing the observed rect against the request would
+    # never match and the correction would run away.
+    apply_panel "$con" "$width" "$height" "$tx" "$ty"
     sleep 0.4
     got=$(con_rect "$con")
     [ -n "$got" ] || return 0 # window closed meanwhile
     read -r _ _ gx gy <<<"$got"
-    x=$((x - (gx - x)))
-    y=$((y - (gy - y)))
+    offx=$((gx - tx))
+    offy=$((gy - ty))
 
-    for _ in 1 2 3 4; do
-        apply_panel "$con" "$width" "$height" "$x" "$y"
+    # tdesktop reapplies its saved callPanelPosition after showing the window,
+    # and that can land after our first apply, so converge on size and position.
+    for _ in 1 2 3 4 5 6; do
+        apply_panel "$con" "$width" "$height" \
+            "$((tx - offx))" "$((ty - offy))"
         sleep 0.4
         got=$(con_rect "$con")
         [ -n "$got" ] || return 0
-        [ "$(echo "$got" | cut -d' ' -f1-2)" = "$width $height" ] && return 0
+        read -r gw gh gx gy <<<"$got"
+        [ "$gw $gh $gx $gy" = "$width $height $tx $ty" ] && return 0
+        # Re-measure in case a late tdesktop move shifted things again.
+        offx=$((gx - (tx - offx)))
+        offy=$((gy - (ty - offy)))
     done
 }
 
