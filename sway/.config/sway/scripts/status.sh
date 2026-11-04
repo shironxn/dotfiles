@@ -55,14 +55,27 @@ while true; do
   # RAM
   ram_str=$(free -h | awk '/^Mem:/ { used=$3; sub(/i$/, "", used); printf "󰍛 %s", used }')
 
-  # Package updates (1h cache, refreshed in the background)
+  # Package updates (1h cache, refreshed in the background or immediately after pacman runs)
   updates=$(cat "$UPDATES_CACHE" 2>/dev/null)
   updates=${updates:-0}
-  if ! fresh "$UPDATES_CACHE" 3600; then
+  pac_time=$(stat -c %Y /var/lib/pacman/local /var/lib/pacman/sync 2>/dev/null | sort -nr | head -n1)
+  pac_time=${pac_time:-0}
+  cache_time=$(stat -c %Y "$UPDATES_CACHE" 2>/dev/null || echo 0)
+  cache_time=${cache_time:-0}
+
+  if [ ! -f /var/lib/pacman/db.lck ] && { ! fresh "$UPDATES_CACHE" 3600 || [ "$pac_time" -gt "$cache_time" ]; }; then
     # flock releases on its own, so a killed checkupdates cannot wedge the timer.
     (
       flock -n 9 || exit 0
-      put "$UPDATES_CACHE" "$(checkupdates 2>/dev/null | wc -l)"
+      updates_out=$(checkupdates 2>/dev/null)
+      rc=$?
+      if [ $rc -eq 0 ]; then
+        put "$UPDATES_CACHE" "$(printf '%s\n' "$updates_out" | grep -c .)"
+      elif [ $rc -eq 2 ]; then
+        put "$UPDATES_CACHE" 0
+      else
+        touch "$UPDATES_CACHE"
+      fi
     ) 9>>"$UPDATES_CACHE.lock" &
   fi
 
