@@ -13,7 +13,7 @@ files=$(find "$dir" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.pn
 choose_fuzzel() {
   selection=$(printf '%s\n' "$files" | while IFS= read -r f; do
     printf '%s\000icon\037image-x-generic\n' "${f##*/}"
-  done | pick-fuzzel " wallpaper " -w 70 -l 20)
+  done | pick-fuzzel " wallpaper " -w 42 -l 10)
   [ -n "$selection" ] || return 1
   printf '%s\n' "$files" | while IFS= read -r f; do
     if [ "${f##*/}" = "$selection" ]; then
