@@ -68,7 +68,8 @@ sudo pacman -S sway swaybg swaylock swayosd foot fuzzel fish starship tmux \
   thunar mako wl-clipboard cliphist grim slurp wf-recorder brightnessctl \
   playerctl pipewire wireplumber networkmanager jq imagemagick ddcutil \
   papirus-icon-theme ttf-jetbrains-mono-nerd polkit-gnome mpv \
-  ffmpegthumbnailer xdg-desktop-portal-wlr gnu-stow eza bat fastfetch
+  ffmpegthumbnailer xdg-desktop-portal-wlr stow eza bat fastfetch \
+  adw-gtk-theme pacman-contrib btop python-gobject
 yay -S python-pywal16
 ```
 
@@ -137,7 +138,28 @@ A few files fit specific desktop choices and can be adjusted or removed:
 | `git/.config/git/config` | Global git defaults; set your name/email in `~/.gitconfig` |
 | `xdg/.config/mimeapps.list` | Default applications (includes Brave, Loupe, Evince) |
 | `brave/.config/brave-flags.conf` | Wayland flags for the Brave browser |
-| `fontconfig/.config/fontconfig/conf.d/` | Japanese font preference rule (Noto Sans CJK JP) |
+| `fontconfig/.config/fontconfig/conf.d/` | Japanese font preference rule (uses Noto Sans CJK JP; install `noto-fonts-cjk` if needed) |
+| `gtk/.config/gtk-{3.0,4.0}`, `gtk/.icons` | Theme, icon, and cursor names (`adw-gtk3-dark`, `Papirus-Dark`, `Doro`) |
+| `btop/.config/btop/btop.conf` | Full layout; disk filters and process sorting are tuned per machine |
+| `fastfetch/.config/fastfetch/` | Personal ASCII logo, printed on every interactive shell |
+| `systemd/.config/systemd/user/notify-failure@.service` | Generic template; only active where a unit sets `OnFailure=` |
+
+## Local Overrides
+
+Customize without editing this repository. Three hooks are loaded last, so
+anything set there wins:
+
+| Hook | Loaded by |
+|---|---|
+| `~/.gitconfig.local` | `git/config` (`[include]`) |
+| `~/.config/fish/config.local.fish` | `fish/config.fish` |
+| `~/.config/sway/host.conf` | `sway/config` |
+
+Files under `xdg/` have no override hook and take effect on the next login.
+Review `mimeapps.list` (sets Brave as the default browser, plus a Roblox
+handler) and `user-dirs.dirs` (lowercase `~/downloads`, `~/pictures`,
+`~/videos`) before installing, or delete them from `$HOME` afterwards if you
+prefer your own defaults.
 
 ## Not Tracked
 
@@ -191,7 +213,7 @@ Deliberately left out of the repository:
 | `Super+s`, `Super+w`, `Super+e` | Stacking, tabbed, toggle split |
 | `Super+f` | Fullscreen toggle |
 | `Super+Shift+space` | Floating toggle |
-| `Super+p` | Floating + sticky toggle |
+| `Super+p` | Sticky toggle |
 | `Super+space` | Focus toggle (tiling ↔ floating) |
 | `Super+a` | Focus parent container |
 | `Super+r` then `h/j/k/l` | Resize mode |
@@ -204,6 +226,7 @@ Deliberately left out of the repository:
 - **Brightness**: Internal backlight via `swayosd-client`, external via `ddcutil`
 - **Keyboard Backlight**: ThinkPad keyboard backlight stepped through OSD
 - **Media**: Play/pause, next, previous via `playerctl`
+- **Lid**: closing the lid locks the screen, then logind suspends (system default)
 
 ## Theming
 

@@ -14,7 +14,8 @@ required=(
     sway swaymsg swaybg swaylock swayosd-server swayosd-client foot fuzzel
     fish starship tmux mako thunar wl-copy wl-paste cliphist grim slurp
     wf-recorder brightnessctl playerctl pactl nmcli checkupdates jq magick
-    ddcutil wal python3 fastfetch mpv notify-send dconf gsettings
+    ddcutil wal python3 fastfetch mpv notify-send gsettings
+    btop
 )
 missing=()
 for cmd in "${required[@]}"; do

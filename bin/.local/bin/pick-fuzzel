@@ -5,6 +5,16 @@
 prompt="${1:-}"
 [ $# -gt 0 ] && shift
 
+# Toggle: if the same picker is already open, close it.
+# If a different fuzzel is open, replace it cleanly.
+if pgrep -x fuzzel >/dev/null 2>&1; then
+  if [ -n "$prompt" ] && pkill -f "fuzzel.*-p +$prompt" 2>/dev/null; then
+    exit 0
+  fi
+  pkill -x fuzzel 2>/dev/null || true
+  sleep 0.05
+fi
+
 [ -n "$prompt" ] && set -- -p "$prompt" "$@"
 
 exec fuzzel -d -i --minimal-lines "$@"
