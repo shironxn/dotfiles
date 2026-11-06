@@ -27,23 +27,23 @@
 # Configure specific mice, keyboards, or hardware workarounds.
 # Find device identifiers with: swaymsg -t get_inputs
 #
-# input "2362:9520:PixArt_Gaming_Mouse" {
+# input "0000:0000:Example_Mouse" {
 #     accel_profile flat
 #     pointer_accel 0
 # }
 #
 # # Disable misbehaving input interfaces (e.g. wireless dongles that emit phantom keys):
-# input "43173:8551:YJX-CHIP_NACODEX_2.4G" {
+# input "0000:0000:Example_Dongle" {
 #     events disabled
 # }
-# input "43173:8551:YJX-CHIP_NACODEX_2.4G_Keyboard" {
+# input "0000:0000:Example_Dongle_Keyboard" {
 #     events disabled
 # }
 
 # --- Graphics Tablets ---
 # Map drawing tablets or pens to a specific display.
 #
-# input "1386:890:Wacom_One_by_Wacom_S_Pen" {
+# input "0000:0000:Example_Tablet_Pen" {
 #     map_to_output HDMI-A-2
 # }
 # input type:tablet_tool {

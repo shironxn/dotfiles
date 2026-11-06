@@ -122,7 +122,7 @@ workspace 1 output HDMI-A-2 eDP-1
 workspace 7 output eDP-1 HDMI-A-2
 
 # Device quirks or gaming mouse sensitivity:
-input "2362:9520:PixArt_Gaming_Mouse" {
+input "0000:0000:Example_Mouse" {
     accel_profile flat
     pointer_accel 0
 }
@@ -138,6 +138,18 @@ A few files fit specific desktop choices and can be adjusted or removed:
 | `xdg/.config/mimeapps.list` | Default applications (includes Brave, Loupe, Evince) |
 | `brave/.config/brave-flags.conf` | Wayland flags for the Brave browser |
 | `fontconfig/.config/fontconfig/conf.d/` | Japanese font preference rule (Noto Sans CJK JP) |
+
+## Not Tracked
+
+Deliberately left out of the repository:
+
+| Path | Why |
+|---|---|
+| `~/.config/sway/host.conf` | Real monitor layout, device IDs, and per-machine quirks |
+| `~/.config/fish/conf.d/secrets.fish` | API keys and tokens |
+| `~/.config/fish/fish_variables` | Machine-local shell state |
+| `~/.gitconfig` | Identity |
+| `~/.cache/wal/*` | Generated palette, rebuilt from the wallpaper |
 
 ## Keybindings
 
