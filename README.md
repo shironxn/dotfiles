@@ -50,7 +50,7 @@ sway/                   Sway window manager config and helper scripts
   host.conf.example     template for machine-specific hardware overrides
   scripts/              desktop helpers (brightness, recorder, screenshot, etc.)
 systemd/                user units (failure alerts)
-thunar/                 Thunar settings and custom context actions
+thunar/                 Thunar custom context actions
 tmux/                   tmux status and keybindings
 wal/                    pywal templates for every themed program
 xdg/                    MIME defaults, user dirs, Wayland env

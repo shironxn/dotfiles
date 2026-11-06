@@ -11,10 +11,10 @@ command -v stow >/dev/null 2>&1 ||
 
 # Programs the configuration calls. Missing ones are reported, never installed.
 required=(
-    sway swaybg swaylock swayosd-server foot fuzzel fish starship tmux mako
-    thunar wl-copy cliphist grim slurp wf-recorder brightnessctl playerctl
-    pactl checkupdates jq magick ddcutil wal fastfetch mpv notify-send
-    dconf gsettings
+    sway swaymsg swaybg swaylock swayosd-server swayosd-client foot fuzzel
+    fish starship tmux mako thunar wl-copy wl-paste cliphist grim slurp
+    wf-recorder brightnessctl playerctl pactl nmcli checkupdates jq magick
+    ddcutil wal python3 fastfetch mpv notify-send dconf gsettings
 )
 missing=()
 for cmd in "${required[@]}"; do
