@@ -1,13 +1,14 @@
 #!/bin/bash
 # Sway status bar. Sections: [REC] │ [MEDIA] │ [HARDWARE] │ [PERIPHERALS] │ [CLOCK]
 
-TEMP_CACHE=/tmp/sway-cpu-temp
-NP_CACHE=/tmp/sway-nowplaying
-WIFI_CACHE=/tmp/sway-wifi
-VOL_CACHE=/tmp/sway-vol
-MIC_CACHE=/tmp/sway-mic-mute
-UPDATES_CACHE=/tmp/sway-updates
-REC_START=/tmp/sway-rec-start
+RT="${XDG_RUNTIME_DIR:-/tmp}/sway"; mkdir -p "$RT"
+TEMP_CACHE=$RT/cpu-temp
+NP_CACHE=$RT/nowplaying
+WIFI_CACHE=$RT/wifi
+VOL_CACHE=$RT/vol
+MIC_CACHE=$RT/mic-mute
+UPDATES_CACHE=$RT/updates
+REC_START=$RT/rec-start
 
 # fresh <file> <seconds>
 fresh() {

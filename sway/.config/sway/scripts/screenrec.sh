@@ -2,7 +2,8 @@
 # Screen recorder toggle script using wf-recorder with desktop audio capture
 set -eu
 
-REC_START_FILE="/tmp/sway-rec-start"
+RT="${XDG_RUNTIME_DIR:-/tmp}/sway"; mkdir -p "$RT"
+REC_START_FILE="$RT/rec-start"
 
 # If already recording, stop gracefully
 if pgrep -x wf-recorder >/dev/null; then

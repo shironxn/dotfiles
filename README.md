@@ -32,7 +32,6 @@ portable across machines.
 
 ```
 bin/                    general command-line scripts installed to ~/.local/bin
-  notify-failure        desktop alert for failed systemd user units
   pick-fuzzel           shared dmenu wrapper for every picker
 brave/                  Wayland flags for Brave browser
 btop/                   system monitor (uses terminal palette)
@@ -49,7 +48,7 @@ starship/               prompt configuration
 sway/                   Sway window manager config and helper scripts
   host.conf.example     template for machine-specific hardware overrides
   scripts/              desktop helpers (brightness, recorder, screenshot, etc.)
-systemd/                user units (failure alerts)
+systemd/                user units (tmux session)
 thunar/                 Thunar custom context actions
 tmux/                   tmux status and keybindings
 wal/                    pywal templates for every themed program
@@ -69,7 +68,7 @@ sudo pacman -S sway swaybg swaylock swayosd foot fuzzel fish starship tmux \
   playerctl pipewire wireplumber networkmanager jq imagemagick ddcutil \
   papirus-icon-theme ttf-jetbrains-mono-nerd polkit-gnome mpv \
   ffmpegthumbnailer xdg-desktop-portal-wlr stow eza bat fastfetch \
-  adw-gtk-theme pacman-contrib btop python-gobject
+  adw-gtk-theme pacman-contrib btop
 yay -S python-pywal16
 ```
 
@@ -79,7 +78,8 @@ Two optional assets are not packaged:
   `~/.local/share/icons/<name>` and update the theme name in
   `gtk/.config/gtk-3.0/settings.ini`, `gtk-4.0/settings.ini`, and
   `gtk/.icons/default/index.theme`.
-- **Wallpapers**: `Super+Shift+w` searches `~/pictures/wallpapers`.
+- **Wallpapers**: `Super+Shift+w` opens `~/pictures/wallpapers` in Thunar.
+  Right-click an image and pick **Set as Wallpaper**.
 
 ## Install
 
@@ -142,7 +142,6 @@ A few files fit specific desktop choices and can be adjusted or removed:
 | `gtk/.config/gtk-{3.0,4.0}`, `gtk/.icons` | Theme, icon, and cursor names (`adw-gtk3-dark`, `Papirus-Dark`, `Doro`) |
 | `btop/.config/btop/btop.conf` | Full layout; disk filters and process sorting are tuned per machine |
 | `fastfetch/.config/fastfetch/` | Personal ASCII logo, printed on every interactive shell |
-| `systemd/.config/systemd/user/notify-failure@.service` | Generic template; only active where a unit sets `OnFailure=` |
 
 ## Local Overrides
 
@@ -195,7 +194,7 @@ Deliberately left out of the repository:
 |---|---|
 | `Super+Shift+s`, `Print` | Screenshot (Area, Window, or Display) |
 | `Super+Shift+r` | Screen recorder with desktop audio |
-| `Super+Shift+w` | GTK Wallpaper picker modal |
+| `Super+Shift+w` | Open `~/pictures/wallpapers` in Thunar (right-click → Set as Wallpaper) |
 | `Super+Shift+v` | Clipboard history |
 | `Super+Alt+v` | Clear clipboard history |
 | `Super+Shift+BackSpace` | Lock screen (`swaylock`) |

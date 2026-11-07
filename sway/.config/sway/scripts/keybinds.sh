@@ -1,59 +1,80 @@
 #!/bin/sh
-# Keybinding cheatsheet popup (responsive & toggleable)
+# Keybinding cheatsheet, generated from keybinds.conf so it cannot drift.
 set -eu
 
-# Toggle: close if already running
-if pkill -f 'fuzzel.* keybinds ' 2>/dev/null; then
-  exit 0
-fi
+pkill -f 'fuzzel.* keybinds ' 2>/dev/null && exit 0
 
-command -v pick-fuzzel >/dev/null || exit 1
+CONF="${XDG_CONFIG_HOME:-$HOME/.config}/sway/config.d/keybinds.conf"
+[ -f "$CONF" ] || exit 0
 
-# Adaptive size based on active monitor effective resolution
-h=$(swaymsg -t get_outputs 2>/dev/null | jq -r '([.[] | select(.focused)] | first // .[0]) | .rect.height / .scale' 2>/dev/null || echo 1080)
-h=${h%.*}
+# Adapt to the focused monitor so the popup never eats the screen.
+h=$(swaymsg -t get_outputs 2>/dev/null |
+  jq -r '([.[] | select(.focused)] | first // .[0]) | .rect.height / .scale' 2>/dev/null || true)
+case "${h%%.*}" in
+'' | *[!0-9]*) lines=10 ;;
+*) lines=$(((${h%%.*} - 200) / 26)) ;;
+esac
+[ "$lines" -lt 6 ] && lines=6
+[ "$lines" -gt 14 ] && lines=14
 
-if [ "${h:-1080}" -lt 800 ]; then
-  lines=7
-  width=38
-elif [ "${h:-1080}" -lt 1000 ]; then
-  lines=8
-  width=40
-else
-  lines=10
-  width=42
-fi
-
-cat << 'EOF' | pick-fuzzel " keybinds " -w "$width" -l "$lines" >/dev/null || true
-Super+Return         󰇖 terminal
-Super+d              󰇖 launcher
-Super+Shift+q        󰇖 close window
-Super+Tab            󰇖 switcher
-Super+Shift+c        󰇖 reload config
-Super+Shift+e        󰇖 exit sway
-Print / Super+Sh+s   󰆏 screenshot
-Super+Shift+r        󰆏 recorder
-Super+Shift+w        󰆏 wallpaper
-Super+Shift+v        󰆏 clipboard
-Super+Alt+v          󰆏 clear clip
-Super+Shift+Bksp     󰆏 lock screen
-Super+Shift+Delete   󰆏 power menu
-Super+hjkl / arrows  󰆐 focus move
-Super+Shift+hjkl/arr 󰆐 window move
-Super+1..0           󰲎 workspace 1..10
-Super+Shift+1..0     󰲎 move to ws 1..10
-Super+o / S+Shift+o  󰍹 focus/move monitor
-Super+b / Super+v    󰆗 split h / v
-Super+s / w / e      󰆗 layout mode
-Super+f              󰆗 fullscreen
-Super+Shift+space    󰆗 floating toggle
-Super+p              󰆗 sticky toggle
-Super+space          󰆗 focus tiling/float
-Super+a              󰆗 focus parent
-Super+minus          󰤼 scratchpad show
-Super+Shift+minus    󰤼 scratchpad move
-Super+r              󰩨 resize mode
-Audio keys           󰕾 volume / mute
-Brightness keys      󰕾 screen brightness
-Media keys           󰎆 play / track
-EOF
+awk '
+function tidy(cmd,   c) {
+  c = cmd
+  sub(/^exec /, "", c)
+  sub(/^~\/\.config\/sway\/scripts\//, "", c)
+  sub(/^thunar ~\/pictures\/wallpapers$/, "wallpaper folder", c)
+  sub(/\.sh( |$)/, " ", c)
+  sub(/^swayosd-client .*/, "volume OSD", c)
+  sub(/^cliphist list.*/, "clipboard history", c)
+  sub(/^cliphist wipe.*/, "clear clipboard", c)
+  sub(/^swaynag.*/, "exit sway", c)
+  sub(/^swaylock$/, "lock screen", c)
+  sub(/^swaymsg exit$/, "logout", c)
+  sub(/^\$term$/, "terminal", c)
+  sub(/^fuzzel$/, "launcher", c)
+  sub(/^kill$/, "close window", c)
+  sub(/^reload$/, "reload config", c)
+  sub(/^playerctl /, "media ", c)
+  sub(/^splith$/, "split horizontal", c)
+  sub(/^splitv$/, "split vertical", c)
+  sub(/^fullscreen$/, "fullscreen", c)
+  sub(/^floating toggle$/, "floating", c)
+  sub(/^sticky toggle$/, "sticky", c)
+  sub(/^focus mode_toggle$/, "tiling / floating", c)
+  sub(/^focus parent$/, "parent container", c)
+  sub(/^move scratchpad$/, "to scratchpad", c)
+  sub(/^scratchpad show$/, "scratchpad", c)
+  sub(/^workspace number /, "workspace ", c)
+  sub(/^move container to workspace number /, "move to workspace ", c)
+  sub(/^output-toggle focus$/, "focus other monitor", c)
+  sub(/^output-toggle move$/, "move to other monitor", c)
+  sub(/^mode "resize"$/, "enter resize mode", c)
+  sub(/^mode "default"$/, "leave resize mode", c)
+  gsub(/"/, "", c)
+  sub(/ [0-9]+px$/, "", c)
+  gsub(/  +/, " ", c)
+  sub(/ +$/, "", c)
+  return c
+}
+/^# ---/ { next }
+/^# / {
+  h = $0
+  sub(/^# +/, "", h)
+  sub(/ \(.*/, "", h)
+  if (h != "" && h != "Key Bindings") printf "\n%s\n", toupper(h)
+  next
+}
+/^[ \t]*bindsym/ {
+  line = $0
+  sub(/^[ \t]*bindsym +/, "", line)
+  sub(/^--locked +/, "", line)
+  i = index(line, " ")
+  combo = substr(line, 1, i - 1)
+  cmd = substr(line, i + 1)
+  gsub(/\$mod/, "Super", combo)
+  gsub(/\$left/, "h", combo); gsub(/\$down/, "j", combo)
+  gsub(/\$up/, "k", combo);   gsub(/\$right/, "l", combo)
+  gsub(/Mod4\+/, "Super+", combo)
+  printf "%-24s %s\n", combo, tidy(cmd)
+}
+' "$CONF" | pick-fuzzel " keybinds " -w 52 -l "$lines" >/dev/null || true
