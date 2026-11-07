@@ -1,184 +1,176 @@
-#!/bin/bash
-# Sway status bar. Sections: [REC] │ [MEDIA] │ [HARDWARE] │ [PERIPHERALS] │ [CLOCK]
+#!/bin/sh
+# Sway bar status line: [REC] │ [MEDIA] │ [HARDWARE] │ [PERIPHERALS] │ [CLOCK]
+set -u # -e omitted: the loop must survive failed probes
 
-RT="${XDG_RUNTIME_DIR:-/tmp}/sway"; mkdir -p "$RT"
-TEMP_CACHE=$RT/cpu-temp
-NP_CACHE=$RT/nowplaying
-WIFI_CACHE=$RT/wifi
-VOL_CACHE=$RT/vol
-MIC_CACHE=$RT/mic-mute
-UPDATES_CACHE=$RT/updates
-REC_START=$RT/rec-start
+RT="${XDG_RUNTIME_DIR:-/tmp}/sway"
+mkdir -p "$RT"
+UPDATES_CACHE="$RT/updates"
 
 # fresh <file> <seconds>
 fresh() {
   [ -f "$1" ] || return 1
-  local age=$(( $(date +%s) - $(stat -c %Y "$1" 2>/dev/null || echo 0) ))
-  [ "$age" -lt "$2" ]
+  [ "$(($(date +%s) - $(stat -c %Y "$1" 2>/dev/null || echo 0)))" -lt "$2" ]
 }
 
-# put <file> <value>: atomic write, so a reader never sees a half-written cache.
+# put <file> <value>: rename is atomic, so a reader never sees a partial write.
 put() {
-  printf '%s\n' "$2" > "$1.$$" && mv -f "$1.$$" "$1"
+  printf '%s\n' "$2" >"$1.$$" && mv -f "$1.$$" "$1"
 }
 
-while true; do
-  # Recording timer
-  rec_str=""
+# cached <file> <seconds> <command...>: print the cache, or recompute and store it.
+cached() {
+  file=$1
+  if fresh "$file" "$2"; then
+    cat "$file"
+    return 0
+  fi
+  shift 2
+  value=$("$@" 2>/dev/null)
+  put "$file" "$value"
+  printf '%s' "$value"
+}
+
+cpu_temp() {
+  raw=""
+  for z in /sys/class/thermal/thermal_zone*; do
+    case "$(cat "$z/type" 2>/dev/null)" in
+    x86_pkg_temp | cpu* | k10temp | coretemp)
+      raw=$(cat "$z/temp" 2>/dev/null) && [ -n "$raw" ] && break
+      ;;
+    esac
+  done
+  [ -n "$raw" ] || raw=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)
+  printf '󰔏 %s°C' "$((${raw:-0} / 1000))"
+}
+
+now_playing() {
+  timeout 1.5 playerctl metadata --format '󰎆 {{artist}} - {{title}}' 2>/dev/null | cut -c1-42
+}
+
+wifi_icon() {
+  if nmcli -t -f active,ssid dev wifi 2>/dev/null | grep -q '^yes'; then
+    printf '󰖩'
+  else
+    printf '󰖪'
+  fi
+}
+
+volume() {
+  if pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q 'Mute: yes'; then
+    printf '󰖁'
+    return 0
+  fi
+  level=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -oP '\d+%' | head -n1 | tr -d '%')
+  level=${level:-0}
+  if [ "$level" -eq 0 ]; then
+    printf '󰖁'
+  elif [ "$level" -lt 34 ]; then
+    printf '󰕿 %s%%' "$level"
+  elif [ "$level" -lt 67 ]; then
+    printf '󰖀 %s%%' "$level"
+  else
+    printf '󰕾 %s%%' "$level"
+  fi
+}
+
+mic_flag() {
+  if pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null | grep -qi 'yes'; then
+    printf 1
+  else
+    printf 0
+  fi
+}
+
+battery() {
+  for b in /sys/class/power_supply/BAT*; do
+    [ -d "$b" ] || continue
+    capacity=$(cat "$b/capacity" 2>/dev/null || echo 0)
+    if [ "$(cat "$b/status" 2>/dev/null)" = Charging ]; then
+      icon=󰂄
+    elif [ "$capacity" -ge 90 ]; then
+      icon=󰁹
+    elif [ "$capacity" -ge 70 ]; then
+      icon=󰂀
+    elif [ "$capacity" -ge 50 ]; then
+      icon=󰁾
+    elif [ "$capacity" -ge 30 ]; then
+      icon=󰁼
+    elif [ "$capacity" -ge 15 ]; then
+      icon=󰁺
+    else
+      icon=󰂃
+    fi
+    printf ' · %s %s%%' "$icon" "$capacity"
+    return 0
+  done
+}
+
+kbd_flag() {
+  for d in /sys/class/leds/tpacpi::kbd_backlight/brightness \
+    /sys/class/leds/*kbd*backlight*/brightness \
+    /sys/class/leds/*::kbd_backlight/brightness; do
+    [ -f "$d" ] || continue
+    [ "$(cat "$d" 2>/dev/null || echo 0)" -gt 0 ] && printf ' · 󰌌'
+    return 0
+  done
+}
+
+# Package updates cost a full repo query, so they run detached with a 1h cache
+# and are refreshed early whenever pacman's own databases change.
+refresh_updates() {
+  [ -f /var/lib/pacman/db.lck ] && return 0
+  pacman_time=$(stat -c %Y /var/lib/pacman/local /var/lib/pacman/sync 2>/dev/null | sort -nr | head -n1)
+  cache_time=$(stat -c %Y "$UPDATES_CACHE" 2>/dev/null || echo 0)
+  fresh "$UPDATES_CACHE" 3600 && [ "${pacman_time:-0}" -le "${cache_time:-0}" ] && return 0
+  (
+    flock -n 9 || exit 0
+    out=$(checkupdates 2>/dev/null)
+    case $? in
+    0) put "$UPDATES_CACHE" "$(printf '%s\n' "$out" | grep -c .)" ;;
+    2) put "$UPDATES_CACHE" 0 ;;
+    *) touch "$UPDATES_CACHE" ;;
+    esac
+  ) 9>>"$UPDATES_CACHE.lock" &
+}
+
+while :; do
   sleep_for=3
+
+  rec=""
   if pgrep -x wf-recorder >/dev/null; then
     sleep_for=1
-    now=$(date +%s)
-    start=$(cat "$REC_START" 2>/dev/null || echo "$now")
-    elapsed=$((now - start))
-    printf -v rec_str 'REC %02d:%02d' $((elapsed / 60)) $((elapsed % 60))
+    elapsed=$(($(date +%s) - $(cat "$RT/rec-start" 2>/dev/null || date +%s)))
+    rec=$(printf 'REC %02d:%02d' $((elapsed / 60)) $((elapsed % 60)))
   fi
 
-  # CPU temperature: search for common package/core sensors, fallback to zone0
-  temp_str=$(cat "$TEMP_CACHE" 2>/dev/null)
-  if ! fresh "$TEMP_CACHE" 30 || [ -z "$temp_str" ]; then
-    raw=""
-    for z in /sys/class/thermal/thermal_zone*; do
-      type=$(cat "$z/type" 2>/dev/null || true)
-      case "$type" in
-        x86_pkg_temp | cpu* | k10temp | coretemp)
-          raw=$(cat "$z/temp" 2>/dev/null || true)
-          [ -n "$raw" ] && break
-          ;;
-      esac
-    done
-    [ -z "$raw" ] && raw=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)
-    raw=${raw:-0}
-    temp_str="󰔏 $((raw / 1000))°C"
-    put "$TEMP_CACHE" "$temp_str"
-  fi
+  refresh_updates
+  updates=$(cat "$UPDATES_CACHE" 2>/dev/null || echo 0)
+  case "$updates" in '' | *[!0-9]*) updates=0 ;; esac
 
-  # RAM
-  ram_str=$(free -h | awk '/^Mem:/ { used=$3; sub(/i$/, "", used); printf "󰍛 %s", used }')
+  temp=$(cached "$RT/cpu-temp" 30 cpu_temp)
+  media=$(cached "$RT/nowplaying" 5 now_playing)
+  wifi=$(cached "$RT/wifi" 20 wifi_icon)
+  vol=$(cached "$RT/vol" 5 volume)
 
-  # Package updates (1h cache, refreshed in the background or immediately after pacman runs)
-  updates=$(cat "$UPDATES_CACHE" 2>/dev/null)
-  updates=${updates:-0}
-  pac_time=$(stat -c %Y /var/lib/pacman/local /var/lib/pacman/sync 2>/dev/null | sort -nr | head -n1)
-  pac_time=${pac_time:-0}
-  cache_time=$(stat -c %Y "$UPDATES_CACHE" 2>/dev/null || echo 0)
-  cache_time=${cache_time:-0}
-
-  if [ ! -f /var/lib/pacman/db.lck ] && { ! fresh "$UPDATES_CACHE" 3600 || [ "$pac_time" -gt "$cache_time" ]; }; then
-    # flock releases on its own, so a killed checkupdates cannot wedge the timer.
-    (
-      flock -n 9 || exit 0
-      updates_out=$(checkupdates 2>/dev/null)
-      rc=$?
-      if [ $rc -eq 0 ]; then
-        put "$UPDATES_CACHE" "$(printf '%s\n' "$updates_out" | grep -c .)"
-      elif [ $rc -eq 2 ]; then
-        put "$UPDATES_CACHE" 0
-      else
-        touch "$UPDATES_CACHE"
-      fi
-    ) 9>>"$UPDATES_CACHE.lock" &
-  fi
-
-  sys_str="${temp_str} · ${ram_str}"
-  [ "$updates" -gt 0 ] && sys_str="${sys_str} · 󰏗 ${updates}"
-
-  # Now playing
-  if fresh "$NP_CACHE" 5; then
-    np=$(cat "$NP_CACHE")
+  mic=""
+  if fresh "$RT/mic-mute" 3; then
+    [ "$(cat "$RT/mic-mute")" = 1 ] && mic=" · 󰍭"
   else
-    np=$(timeout 1.5 playerctl metadata --format '󰎆 {{artist}} - {{title}}' 2>/dev/null | cut -c1-42)
-    put "$NP_CACHE" "$np"
+    muted=$(mic_flag)
+    put "$RT/mic-mute" "$muted"
+    [ "$muted" = 1 ] && mic=" · 󰍭"
   fi
 
-  # WiFi
-  wifi=$(cat "$WIFI_CACHE" 2>/dev/null)
-  if ! fresh "$WIFI_CACHE" 20 || [ -z "$wifi" ]; then
-    if nmcli -t -f active,ssid dev wifi 2>/dev/null | grep -q '^yes'; then
-      wifi="󰖩"
-    else
-      wifi="󰖪"
-    fi
-    put "$WIFI_CACHE" "$wifi"
-  fi
+  ram=$(free -h | awk '/^Mem:/ { sub(/i$/, "", $3); printf "󰍛 %s", $3 }')
+  hardware="${temp} · ${ram}"
+  [ "$updates" -gt 0 ] && hardware="${hardware} · 󰏗 ${updates}"
 
-  # Output volume
-  vol_str=$(cat "$VOL_CACHE" 2>/dev/null)
-  if ! fresh "$VOL_CACHE" 5 || [ -z "$vol_str" ]; then
-    if pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q 'Mute: yes'; then
-      vol_str="󰖁"
-    else
-      level=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -oP '\d+%' | head -n1 | tr -d '%')
-      level=${level:-0}
-      if [ "$level" -eq 0 ]; then
-        vol_str="󰖁"
-      elif [ "$level" -lt 34 ]; then
-        vol_str="󰕿 ${level}%"
-      elif [ "$level" -lt 67 ]; then
-        vol_str="󰖀 ${level}%"
-      else
-        vol_str="󰕾 ${level}%"
-      fi
-    fi
-    put "$VOL_CACHE" "$vol_str"
-  fi
-
-  # Microphone mute, shown only when muted
-  mic_str=""
-  if fresh "$MIC_CACHE" 3; then
-    [ "$(cat "$MIC_CACHE")" = "1" ] && mic_str=" · 󰍭"
-  else
-    if pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null | grep -qi 'yes'; then
-      mic_str=" · 󰍭"
-      put "$MIC_CACHE" 1
-    else
-      put "$MIC_CACHE" 0
-    fi
-  fi
-
-  # Battery (detect BAT0, BAT1, or omit cleanly on desktops without batteries)
-  bat_str=""
-  for b in /sys/class/power_supply/BAT*; do
-    if [ -d "$b" ]; then
-      battery=$(cat "$b/capacity" 2>/dev/null || echo 0)
-      charge=$(cat "$b/status" 2>/dev/null || echo '')
-      if [ "$charge" = "Charging" ]; then
-        bat_icon="󰂄"
-      elif [ "$battery" -ge 90 ]; then
-        bat_icon="󰁹"
-      elif [ "$battery" -ge 70 ]; then
-        bat_icon="󰂀"
-      elif [ "$battery" -ge 50 ]; then
-        bat_icon="󰁾"
-      elif [ "$battery" -ge 30 ]; then
-        bat_icon="󰁼"
-      elif [ "$battery" -ge 15 ]; then
-        bat_icon="󰁺"
-      else
-        bat_icon="󰂃"
-      fi
-      bat_str=" · ${bat_icon} ${battery}%"
-      break
-    fi
-  done
-
-  # Keyboard backlight (generic across vendors)
-  kbd_str=""
-  for d in /sys/class/leds/tpacpi::kbd_backlight/brightness /sys/class/leds/*kbd*backlight*/brightness /sys/class/leds/*::kbd_backlight/brightness; do
-    if [ -f "$d" ]; then
-      kbd=$(cat "$d" 2>/dev/null || echo 0)
-      [ "$kbd" -gt 0 ] && kbd_str=" · 󰌌"
-      break
-    fi
-  done
-
-  peri_str="${wifi} · ${vol_str}${mic_str}${bat_str}${kbd_str}"
-  clock_str="󰃭 $(date +'%d %b · %H:%M')"
+  peripherals="${wifi} · ${vol}${mic}$(battery)$(kbd_flag)"
 
   out=""
-  [ -n "$rec_str" ] && out="${rec_str}  │  "
-  [ -n "$np" ] && out="${out}${np}  │  "
-  echo "${out}${sys_str}  │  ${peri_str}  │  ${clock_str}"
+  [ -n "$rec" ] && out="${rec}  │  "
+  [ -n "$media" ] && out="${out}${media}  │  "
+  printf '%s%s  │  %s  │  󰃭 %s\n' "$out" "$hardware" "$peripherals" "$(date +'%d %b · %H:%M')"
 
   sleep "$sleep_for"
 done

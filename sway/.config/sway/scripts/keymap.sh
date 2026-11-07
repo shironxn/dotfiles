@@ -7,7 +7,7 @@ pkill -f 'fuzzel.* keybinds ' 2>/dev/null && exit 0
 CONF="${XDG_CONFIG_HOME:-$HOME/.config}/sway/config.d/keybinds.conf"
 [ -f "$CONF" ] || exit 0
 
-# Adapt to the focused monitor so the popup never eats the screen.
+# Size the popup to the focused monitor so it never covers the screen.
 h=$(swaymsg -t get_outputs 2>/dev/null |
   jq -r '([.[] | select(.focused)] | first // .[0]) | .rect.height / .scale' 2>/dev/null || true)
 case "${h%%.*}" in
@@ -17,6 +17,8 @@ esac
 [ "$lines" -lt 6 ] && lines=6
 [ "$lines" -gt 14 ] && lines=14
 
+# Every substitution below turns a config fragment into the words a person
+# would use for it; order matters, the first match wins.
 awk '
 function tidy(cmd,   c) {
   c = cmd
@@ -24,6 +26,7 @@ function tidy(cmd,   c) {
   sub(/^~\/\.config\/sway\/scripts\//, "", c)
   sub(/^thunar ~\/pictures\/wallpapers$/, "wallpaper folder", c)
   sub(/\.sh( |$)/, " ", c)
+  sub(/ +$/, "", c)
   sub(/^swayosd-client .*/, "volume OSD", c)
   sub(/^cliphist list.*/, "clipboard history", c)
   sub(/^cliphist wipe.*/, "clear clipboard", c)
@@ -46,8 +49,17 @@ function tidy(cmd,   c) {
   sub(/^scratchpad show$/, "scratchpad", c)
   sub(/^workspace number /, "workspace ", c)
   sub(/^move container to workspace number /, "move to workspace ", c)
-  sub(/^output-toggle focus$/, "focus other monitor", c)
-  sub(/^output-toggle move$/, "move to other monitor", c)
+  sub(/^output focus$/, "focus other monitor", c)
+  sub(/^output move$/, "move to other monitor", c)
+  sub(/^windows$/, "window switcher", c)
+  sub(/^power$/, "power menu", c)
+  sub(/^record$/, "screen recorder", c)
+  sub(/^keymap$/, "this cheatsheet", c)
+  sub(/^mic-toggle$/, "microphone mute", c)
+  sub(/^kbdlight (up|down)$/, "keyboard backlight", c)
+  sub(/^brightness up$/, "screen brighter", c)
+  sub(/^brightness down$/, "screen dimmer", c)
+  sub(/^screenshot$/, "screenshot", c)
   sub(/^mode "resize"$/, "enter resize mode", c)
   sub(/^mode "default"$/, "leave resize mode", c)
   gsub(/"/, "", c)
@@ -62,6 +74,14 @@ function tidy(cmd,   c) {
   sub(/^# +/, "", h)
   sub(/ \(.*/, "", h)
   if (h != "" && h != "Key Bindings") printf "\n%s\n", toupper(h)
+  next
+}
+/^[ \t]*bindswitch/ {
+  line = $0
+  sub(/^[ \t]*bindswitch +/, "", line)
+  sub(/^--locked +/, "", line)
+  i = index(line, " ")
+  printf "%-24s %s\n", substr(line, 1, i - 1), "lock screen (lid close)"
   next
 }
 /^[ \t]*bindsym/ {

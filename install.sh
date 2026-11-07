@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Link this repository into $HOME with GNU Stow.
 set -euo pipefail
 
 cd "$(dirname "$(readlink -f "$0")")"
@@ -21,7 +20,7 @@ for cmd in "${required[@]}"; do
     command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
 done
 if ((${#missing[@]})); then
-    printf 'warning: not found in PATH: %s\n' "${missing[*]}" >&2
+    printf 'warning: not found in PATH: %s\n' "${missing[@]}" >&2
     printf '         see the Requirements section of the README\n\n' >&2
 fi
 
@@ -36,7 +35,7 @@ mkdir -p "$HOME/.config" "$HOME/.local/bin" \
     "$HOME/pictures/screenshots" "$HOME/videos/recordings"
 
 echo "==> setting script permissions"
-chmod +x bin/.local/bin/* sway/.config/sway/scripts/*
+chmod +x bin/.local/bin/pick-fuzzel sway/.config/sway/scripts/*.sh
 
 echo "==> stowing"
 for pkg in "${packages[@]}"; do
@@ -44,6 +43,12 @@ for pkg in "${packages[@]}"; do
     stow -R -t "$HOME" "$pkg" ||
         die "$pkg conflicts with an existing file above; move it aside and retry"
 done
+
+# Thunar rewrites uca.xml whenever an action is edited, replacing a stow
+# symlink with a plain file, so it is copied rather than linked. Re-run this
+# script after changing thunar/.config/Thunar/uca.xml.
+mkdir -p "$HOME/.config/Thunar"
+install -m 600 thunar/.config/Thunar/uca.xml "$HOME/.config/Thunar/uca.xml"
 
 # Thunar ships its own "Set as wallpaper" action that only works on XFCE and
 # GNOME. Under Sway it fails silently, and it sits next to the custom action
@@ -62,8 +67,7 @@ echo
 echo "==> next steps"
 if [ ! -f "$HOME/.cache/wal/colors-sway" ]; then
     echo "  * no palette yet. Pick a wallpaper (Super+Shift+w) or run:"
-    echo "      wal -i /path/to/wallpaper.jpg"
-    echo "      ~/.config/sway/scripts/wal-theme.sh -R"
+    echo "      ~/.config/sway/scripts/wallpaper.sh -i /path/to/wallpaper.jpg"
 fi
 if ! git config --global user.email >/dev/null 2>&1; then
     echo "  * set your git identity: git config --global user.name/user.email"

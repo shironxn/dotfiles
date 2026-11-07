@@ -17,7 +17,7 @@
 	<name>Set as Wallpaper</name>
 	<submenu></submenu>
 	<unique-id>2-set-as-wallpaper</unique-id>
-	<command>sh -c 'exec ~/.config/sway/scripts/wal-theme.sh -i "$1"' sh %f</command>
+	<command>sh -c 'exec ~/.config/sway/scripts/wallpaper.sh -i "$1"' sh %f</command>
 	<description>Set image as wallpaper and update Pywal theme</description>
 	<range></range>
 	<patterns>*.png;*.jpg;*.jpeg;*.webp;*.PNG;*.JPG;*.JPEG;*.WEBP</patterns>

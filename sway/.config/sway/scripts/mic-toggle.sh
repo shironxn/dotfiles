@@ -1,26 +1,36 @@
 #!/bin/sh
-# Toggle every capture source, which also drives the ThinkPad microphone LED
-# through snd-ctl-led. Monitor sources are skipped.
+# Toggle every capture source. Drives the ThinkPad microphone LED through
+# snd-ctl-led, so the LED follows mute state without extra wiring.
 set -eu
 
+RT="${XDG_RUNTIME_DIR:-/tmp}/sway"
+mkdir -p "$RT"
+
 if pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null | grep -qi 'yes'; then
-    NEW_STATE=0
+  mute=0
+  icon=audio-input-microphone-symbolic
+  msg=On
 else
-    NEW_STATE=1
+  mute=1
+  icon=microphone-disabled-symbolic
+  msg=Muted
 fi
 
-pactl list sources short | grep -v '\.monitor' | awk '{print $1}' | while read -r src; do
-    pactl set-source-mute "$src" "$NEW_STATE" || true
-    if [ "$NEW_STATE" -eq 0 ]; then
-        pactl set-source-volume "$src" 100% || true
-    fi
+# Monitor sources are loopbacks, not capture devices; muting them is noise.
+failed=0
+for src in $(pactl list sources short | awk '!/\.monitor/ {print $1}'); do
+  pactl set-source-mute "$src" "$mute" || failed=1
+  [ "$mute" -eq 0 ] && { pactl set-source-volume "$src" 100% || failed=1; }
 done
 
-if [ "$NEW_STATE" -eq 1 ]; then
-    mkdir -p "${XDG_RUNTIME_DIR:-/tmp}/sway"
-    echo "1" > "${XDG_RUNTIME_DIR:-/tmp}/sway/mic-mute"
-    swayosd-client --custom-icon=microphone-disabled-symbolic --custom-message="Muted" || true
+# Cache only what actually landed, so the bar never reports a state the mixer
+# rejected.
+if [ "$failed" -eq 0 ]; then
+  echo "$mute" >"$RT/mic-mute"
 else
-    echo "0" > "${XDG_RUNTIME_DIR:-/tmp}/sway/mic-mute"
-    swayosd-client --custom-icon=audio-input-microphone-symbolic --custom-message="On" || true
+  rm -f "$RT/mic-mute"
+  icon=microphone-disabled-symbolic
+  msg="Mute failed"
 fi
+
+swayosd-client --custom-icon="$icon" --custom-message="$msg" || true

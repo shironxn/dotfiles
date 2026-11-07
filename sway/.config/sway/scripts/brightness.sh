@@ -1,20 +1,23 @@
 #!/bin/sh
-# Brightness control: internal panels via swayosd, external monitors via ddcutil.
-# Usage: brightness-switch.sh up|down [step]
+# Brightness for the focused output: laptop panel via swayosd, external via DDC/CI.
+#   brightness.sh up|down [step]
 set -eu
 
 case "${1:-}" in
 up | down) ;;
-*) echo "usage: $0 up|down [step]" >&2; exit 1 ;;
+*)
+  echo "usage: $0 up|down [step]" >&2
+  exit 1
+  ;;
 esac
-
 step="${2:-5}"
+
 output=$(swaymsg -t get_outputs 2>/dev/null | jq -r '.[] | select(.focused) | .name' 2>/dev/null || true)
 
-# Internal laptop panels (eDP, LVDS, DSI) control hardware backlight directly
+# Internal panels expose a hardware backlight, which swayosd already drives.
 case "$output" in
 eDP* | LVDS* | DSI* | "")
-  if [ "$1" = "up" ]; then
+  if [ "$1" = up ]; then
     swayosd-client --brightness raise
   else
     swayosd-client --brightness lower
@@ -23,42 +26,41 @@ eDP* | LVDS* | DSI* | "")
   ;;
 esac
 
-# External monitors: communicate over I2C via DDC/CI
 if ! command -v ddcutil >/dev/null; then
   swayosd-client --custom-icon=display-brightness-symbolic --custom-message="ddcutil missing"
   exit 1
 fi
 
-CACHE="$HOME/.cache/brightness-$output"
+# Reading over I2C takes ~0.5s, so cache the last known level per output.
+cache="${XDG_RUNTIME_DIR:-/tmp}/sway/brightness-$output"
+mkdir -p "${cache%/*}"
+
 read_level() {
   ddcutil getvcp 10 --brief 2>/dev/null | awk '{print $4}'
 }
 
-level=$(cat "$CACHE" 2>/dev/null || echo '')
+level=$(cat "$cache" 2>/dev/null || echo '')
 case "$level" in '' | *[!0-9]*) level=$(read_level) ;; esac
-if [ -n "$(find "$CACHE" -mmin +60 2>/dev/null)" ]; then
-  level=$(read_level)
-fi
+[ -n "$(find "$cache" -mmin +60 2>/dev/null)" ] && level=$(read_level)
+
 if [ -z "$level" ]; then
   swayosd-client --custom-icon=display-brightness-symbolic --custom-message="DDC read failed"
   exit 1
 fi
 
-if [ "$1" = "up" ]; then
+if [ "$1" = up ]; then
   level=$((level + step))
-  if [ "$level" -gt 100 ]; then level=100; fi
+  [ "$level" -gt 100 ] && level=100
 else
   level=$((level - step))
-  if [ "$level" -lt 0 ]; then level=0; fi
+  [ "$level" -lt 0 ] && level=0
 fi
-echo "$level" > "$CACHE"
+echo "$level" >"$cache"
 
-# DDC writes are slow (~0.5s), so run them detached. If the write fails, drop
-# the cached level so the next press re-reads the monitor instead of trusting
-# a value that never landed.
-(
-  ddcutil --sleep-multiplier=0.5 setvcp 10 "$level" >/dev/null 2>&1 || rm -f "$CACHE"
-) &
+# The write is slow and the OSD must not wait for it. If it fails, drop the
+# cached level so the next press re-reads the monitor instead of trusting a
+# value that never landed.
+(ddcutil --sleep-multiplier=0.5 setvcp 10 "$level" >/dev/null 2>&1 || rm -f "$cache") &
 
 swayosd-client --custom-progress="$(awk -v v="$level" 'BEGIN { printf "%.2f", v / 100 }')" \
   --custom-icon=display-brightness-symbolic

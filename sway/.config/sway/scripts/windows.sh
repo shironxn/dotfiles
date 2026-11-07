@@ -1,5 +1,5 @@
 #!/bin/sh
-# Window switcher: list every Sway window in fuzzel, focus the selection.
+# Every Sway window in fuzzel, focused on selection.
 set -eu
 
 windows=$(swaymsg -t get_tree | jq -r '
@@ -13,6 +13,4 @@ windows=$(swaymsg -t get_tree | jq -r '
 con_id=$(printf '%s\n' "$windows" |
   pick-fuzzel " switch to " -w 46 -l 10 --with-nth=1 --accept-nth=2) || exit 0
 
-if [ -n "$con_id" ]; then
-  swaymsg "[con_id=$con_id] focus"
-fi
+swaymsg "[con_id=$con_id] focus"

@@ -1,0 +1,4 @@
+# Thunar rewrites uca.xml whenever an action is edited, which replaces the
+# symlink with a regular file and silently stops tracking this repo.
+# install.sh copies it into place instead.
+uca\.xml
