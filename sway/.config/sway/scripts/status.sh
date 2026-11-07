@@ -60,7 +60,7 @@ volume() {
     printf '󰖁'
     return 0
   fi
-  level=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -oP '\d+%' | head -n1 | tr -d '%')
+  level=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -o '[0-9]*%' | head -n1 | tr -d '%')
   level=${level:-0}
   if [ "$level" -eq 0 ]; then
     printf '󰖁'
@@ -140,7 +140,11 @@ while :; do
   if pgrep -x wf-recorder >/dev/null; then
     sleep_for=1
     elapsed=$(($(date +%s) - $(cat "$RT/rec-start" 2>/dev/null || date +%s)))
-    rec=$(printf 'REC %02d:%02d' $((elapsed / 60)) $((elapsed % 60)))
+    if [ "$elapsed" -ge 3600 ]; then
+      rec=$(printf 'REC %d:%02d:%02d' $((elapsed / 3600)) $((elapsed / 60 % 60)) $((elapsed % 60)))
+    else
+      rec=$(printf 'REC %02d:%02d' $((elapsed / 60)) $((elapsed % 60)))
+    fi
   fi
 
   refresh_updates

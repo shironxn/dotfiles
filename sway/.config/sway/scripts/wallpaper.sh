@@ -11,8 +11,11 @@ REQUESTS="$WAL_DIR/.requests"
 APPLIED="$WAL_DIR/.applied"
 
 restore=0
+want=""
 case "${1:-}" in
 -R | --restore) restore=1 ;;
+-i) want="${2:-}" ;;
+*) want="${1:-}" ;;
 esac
 
 notify_error() {
@@ -40,6 +43,9 @@ apply_theme() {
   fi
   [ -f "$WAL_DIR/colors" ] || return 0
 
+  # pywal only writes into ~/.cache/wal; the target dirs are stow's job.
+  # swayosd never creates its config dir, so make sure it exists.
+  mkdir -p "$CONFIG/swayosd"
   for pair in \
     "colors-mako:$CONFIG/mako/config" \
     "colors-swaylock:$CONFIG/swaylock/config" \
@@ -55,9 +61,6 @@ apply_theme() {
   # inherited fd 9 keeps the lock held forever and stalls every later click.
   killall -q swayosd-server 2>/dev/null || true
   nohup swayosd-server --style "$CONFIG/swayosd/style.css" >/dev/null 2>&1 9>&- &
-
-  # foot parses colors at startup; SIGUSR1 only toggles the pre-parsed
-  # [colors-dark]/[colors-light] pair and cannot pick up a new file.
 
   if [ -f "$WAL_DIR/wal" ]; then
     wallpaper=$(cat "$WAL_DIR/wal")
@@ -112,7 +115,7 @@ bar $bar_id colors urgent_workspace ${color4:-#666666} ${color4:-#666666} ${colo
     esac
   fi
 
-  # Only newly opened apps read these, so keep them off the hot path.
+  # dconf writes; only new apps and libadwaita read these.
   (
     gsettings set org.gnome.desktop.interface gtk-theme "adw-gtk3-dark"
     gsettings set org.gnome.desktop.interface font-name "JetBrainsMono Nerd Font 13"
@@ -130,7 +133,6 @@ if [ "$restore" -eq 1 ]; then
 fi
 
 # %f may be a bare filename, so resolve it before trusting it.
-want="${2:-}"
 arg="$want"
 if [ -n "$want" ] && [ ! -f "$want" ]; then
   if [ -f "$PWD/$want" ]; then

@@ -96,7 +96,7 @@ linked, because Thunar replaces the symlink whenever an action is edited; and
 Thunar's built-in wallpaper plugin is disabled when the script can move it,
 since that plugin only works on XFCE and GNOME.
 
-Generate a palette from a wallpaper, then reload Sway (`Super+Shift+c`):
+Generate a palette from a wallpaper:
 
 ```bash
 ~/.config/sway/scripts/wallpaper.sh -i ~/pictures/wallpapers/<wallpaper.jpg>
@@ -160,7 +160,7 @@ installing, or delete them from `$HOME` afterwards.
 | `Super+Shift+Delete` | Power menu |
 
 Hardware keys: volume and mute through `swayosd-client`, microphone through
-`mic-toggle.sh`, brightness on the internal panel through `swayosd-client` and
+`mic.sh`, brightness on the internal panel through `swayosd-client` and
 on external monitors through `ddcutil`, keyboard backlight through the OSD,
 media through `playerctl`. Closing the lid locks the screen, then logind
 suspends.
@@ -179,14 +179,15 @@ Helpers live in `sway/.config/sway/scripts/`.
 | `power.sh` | `Super+Shift+Delete` | Session menu |
 | `brightness.sh` | brightness keys | Panel backlight, or DDC/CI on external monitors |
 | `kbdlight.sh` | keyboard backlight keys | Step the vendor LED, reporting through the OSD |
-| `mic-toggle.sh` | mic mute key | Mute capture sources (monitor loopbacks excluded) |
+| `mic.sh` | mic mute key | Mute capture sources (monitor loopbacks excluded) |
 | `output.sh` | `Super+o`, `Super+Shift+o` | Move focus, or the window, to the next output by x position |
 | `status.sh` | bar `status_command` | The bar |
 
 ## Theming
 
-Picking a wallpaper runs `wallpaper.sh`, which regenerates every template and
-reloads the clients that read them:
+Picking a wallpaper runs `wallpaper.sh`, which regenerates every template.
+mako and SwayOSD pick the new palette up immediately; running terminals
+(foot) parse colours only at startup.
 
 | Template | Target | Applies to |
 |---|---|---|

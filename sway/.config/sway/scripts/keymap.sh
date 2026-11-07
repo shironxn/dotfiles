@@ -55,7 +55,7 @@ function tidy(cmd,   c) {
   sub(/^power$/, "power menu", c)
   sub(/^record$/, "screen recorder", c)
   sub(/^keymap$/, "this cheatsheet", c)
-  sub(/^mic-toggle$/, "microphone mute", c)
+  sub(/^mic$/, "microphone mute", c)
   sub(/^kbdlight (up|down)$/, "keyboard backlight", c)
   sub(/^brightness up$/, "screen brighter", c)
   sub(/^brightness down$/, "screen dimmer", c)
