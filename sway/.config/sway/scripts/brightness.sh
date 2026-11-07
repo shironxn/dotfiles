@@ -53,6 +53,12 @@ else
 fi
 echo "$level" > "$CACHE"
 
-ddcutil --sleep-multiplier=0.5 setvcp 10 "$level" >/dev/null 2>&1 &
+# DDC writes are slow (~0.5s), so run them detached. If the write fails, drop
+# the cached level so the next press re-reads the monitor instead of trusting
+# a value that never landed.
+(
+  ddcutil --sleep-multiplier=0.5 setvcp 10 "$level" >/dev/null 2>&1 || rm -f "$CACHE"
+) &
+
 swayosd-client --custom-progress="$(awk -v v="$level" 'BEGIN { printf "%.2f", v / 100 }')" \
   --custom-icon=display-brightness-symbolic

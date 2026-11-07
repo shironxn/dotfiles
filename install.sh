@@ -14,8 +14,7 @@ required=(
     sway swaymsg swaybg swaylock swayosd-server swayosd-client foot fuzzel
     fish starship tmux mako thunar wl-copy wl-paste cliphist grim slurp
     wf-recorder brightnessctl playerctl pactl nmcli checkupdates jq magick
-    ddcutil wal python3 fastfetch mpv notify-send gsettings
-    btop
+    ddcutil wal fastfetch mpv notify-send gsettings btop
 )
 missing=()
 for cmd in "${required[@]}"; do
@@ -45,6 +44,19 @@ for pkg in "${packages[@]}"; do
     stow -R -t "$HOME" "$pkg" ||
         die "$pkg conflicts with an existing file above; move it aside and retry"
 done
+
+# Thunar ships its own "Set as wallpaper" action that only works on XFCE and
+# GNOME. Under Sway it fails silently, and it sits next to the custom action
+# below with an almost identical label, so image right-clicks look broken.
+# Disable it once; a Thunar upgrade puts the file back and this is a no-op then.
+wallpaper_plugin=/usr/lib/thunarx-3/thunar-wallpaper-plugin.so
+if [ -f "$wallpaper_plugin" ] && [ -w "$(dirname "$wallpaper_plugin")" ]; then
+    mv "$wallpaper_plugin" "$wallpaper_plugin.disabled"
+    echo "  -> disabled Thunar's built-in wallpaper action"
+elif [ -f "$wallpaper_plugin" ]; then
+    echo "  * run this once with sudo to hide Thunar's duplicate wallpaper action:"
+    echo "      sudo mv $wallpaper_plugin $wallpaper_plugin.disabled"
+fi
 
 echo
 echo "==> next steps"
