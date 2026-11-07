@@ -10,7 +10,7 @@
 @define-color accent_bg_color {color4};
 @define-color accent_color {color4};
 
-/* Sharp corners — 0px radius across all widgets, views, and selections */
+/* Sharp corners: 0px radius across all widgets, views, and selections */
 * {{
     border-radius: 0;
 }}

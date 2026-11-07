@@ -26,8 +26,7 @@ fi
 
 packages=(
     bin brave btop fastfetch fish fontconfig foot fuzzel git gtk mpv
-    pipewire starship sway systemd thunar tmux wal xdg
-    xdg-desktop-portal-wlr
+    pipewire portal starship sway systemd thunar tmux wal xdg
 )
 
 echo "==> preparing directories"

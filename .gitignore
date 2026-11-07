@@ -4,12 +4,14 @@
 *.swp
 *.swo
 
-# Python bytecode
+# Python bytecode & cache
 __pycache__/
 *.pyc
+.ruff_cache/
 
-# Machine-local fish variables
+# Machine-local fish variables & overrides
 fish/.config/fish/fish_variables
+fish/.config/fish/config.local.fish
 
 # Local secrets (API keys, personal tokens)
 fish/.config/fish/conf.d/secrets.fish
