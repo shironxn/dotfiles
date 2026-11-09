@@ -59,7 +59,7 @@ apply_theme() {
 
   # The daemon outlives this script, so it must not inherit the lock fd: an
   # inherited fd 9 keeps the lock held forever and stalls every later click.
-  killall -q swayosd-server 2>/dev/null || true
+  killall -q -w swayosd-server 2>/dev/null || true
   nohup swayosd-server --style "$CONFIG/swayosd/style.css" >/dev/null 2>&1 9>&- &
 
   if [ -f "$WAL_DIR/wal" ]; then
@@ -127,8 +127,11 @@ bar $bar_id colors urgent_workspace ${color4:-#666666} ${color4:-#666666} ${colo
 }
 
 if [ "$restore" -eq 1 ]; then
-  [ -f "$WAL_DIR/colors" ] || exit 0
-  apply_theme ""
+  if [ -f "$WAL_DIR/colors" ]; then
+    apply_theme ""
+  else
+    pgrep -x swayosd-server >/dev/null || nohup swayosd-server >/dev/null 2>&1 9>&- &
+  fi
   exit 0
 fi
 
