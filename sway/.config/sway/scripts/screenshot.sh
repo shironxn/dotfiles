@@ -19,8 +19,8 @@ shot() {
   label=$1
   shift
   grim "$@" "$file.png" || exit 0
+  wl-copy --type image/png <"$file.png"
   notify-send -t 2000 "Screenshot" "$label: $(basename "$file.png")"
-  wl-copy --type image/png <"$file.png" &
 }
 
 case "$choice" in
