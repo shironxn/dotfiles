@@ -151,6 +151,13 @@ fi
 }
 target=$(readlink -f "$arg")
 
+# swaymsg re-joins argv and parses the result as a Sway command, so a filename
+# holding a command separator would be executed instead of painted.
+if printf '%s' "$target" | grep -q '[;"[:cntrl:]]'; then
+  notify_error "filename holds ; \" or a control character: $(basename "$target")"
+  exit 1
+fi
+
 # Append is atomic under PIPE_BUF, so concurrent clicks cannot interleave and
 # the append order is the click order. flock is deliberately not used here: it
 # hands the lock out in no particular order, so an older click could win.
