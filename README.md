@@ -2,6 +2,8 @@
 
 Sway desktop on Arch Linux. Wallpapers drive the palette via pywal16.
 
+![Sway desktop](assets/preview.webp)
+
 ## Requirements
 
 ```bash
