@@ -53,15 +53,14 @@ cpu_temp() {
 
 now_playing() {
   # Metadata outlives playback, so a stopped player would keep its last track.
-  # Spotify takes the line over browser video, and both take it over anything
-  # else, so an idle mpv cannot hide music that is playing.
+  # Music comes before browser video, and any other player is ignored.
   all=$(timeout 1.5 playerctl -l 2>/dev/null) || return 0
-  for pref in spotify brave ''; do
+  for pref in spotify brave; do
     for p in $all; do
       case "$p" in
       spotify*) [ "$pref" = spotify ] || continue ;;
       brave*) [ "$pref" = brave ] || continue ;;
-      *) [ -z "$pref" ] || continue ;;
+      *) continue ;;
       esac
       [ "$(timeout 1.5 playerctl -p "$p" status 2>/dev/null)" = "Playing" ] || continue
       timeout 1.5 playerctl -p "$p" metadata --format '󰎆 {{artist}} - {{title}}' 2>/dev/null | cut -c1-42
