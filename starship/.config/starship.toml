@@ -1,6 +1,3 @@
-# Starship prompt
-
-# ── Format: info bar → prompt ──
 format = """
 $directory\
 $git_branch\
