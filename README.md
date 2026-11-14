@@ -1,7 +1,7 @@
 # dotfiles
 
-Sway on Arch Linux. The wallpaper picks the palette through pywal16 and the bar,
-borders, terminal and GTK apps follow it.
+My Sway setup on Arch Linux. A wallpaper sets the palette through pywal16, and
+the bar, borders, terminal and GTK apps read their colours from it.
 
 ![Sway desktop](assets/preview.webp)
 
@@ -21,8 +21,8 @@ sudo pacman -S sway swaybg swaylock swayosd foot fuzzel fish starship tmux \
 yay -S python-pywal16
 ```
 
-Also install `noto-fonts-cjk` for the Japanese fallback in fontconfig, and put a
-`Doro` cursor theme in `~/.local/share/icons/Doro`. For a different cursor,
+Install `noto-fonts-cjk` too, for the Japanese fallback in fontconfig. The cursor
+theme is `Doro`, expected in `~/.local/share/icons/Doro`. To use another one,
 change `seat * xcursor_theme` in `config.d/input.conf` and `gtk-cursor-theme-name`
 in `gtk-3.0/settings.ini` and `gtk-4.0/settings.ini`.
 
@@ -35,13 +35,12 @@ cd ~/dotfiles
 ~/.config/sway/scripts/wallpaper.sh -i ~/pictures/wallpapers/<file.jpg>
 ```
 
-Right-clicking an image in Thunar and choosing **Set as Wallpaper** does what the
-last line does.
+The last line is also on the right-click menu in Thunar, as "Set as Wallpaper".
 
 ## Keys
 
-`Super+/` opens a searchable list built from `keybinds.conf`, so it cannot fall
-out of date.
+`Super+/` lists every binding. The list is built from `keybinds.conf` when you
+open it, so new bindings show up without editing a second file.
 
 | Key | Action |
 |---|---|
@@ -55,14 +54,14 @@ out of date.
 | `Super+Shift+BackSpace` | lock |
 | `Super+Shift+Delete` | power menu |
 
-Volume, microphone mute, panel and keyboard backlight go through SwayOSD,
-external monitor brightness through `ddcutil`, media keys through `playerctl`.
-Closing the lid locks the screen, and logind suspends.
+Volume, microphone mute, panel and keyboard backlight go through SwayOSD.
+External monitor brightness uses `ddcutil` and the media keys use `playerctl`.
+Closing the lid locks the screen, then logind suspends.
 
 ## Layout
 
-Each top-level directory is a stow package that mirrors `$HOME`. `assets/` holds
-the screenshots above.
+Each top-level directory is a stow package that mirrors `$HOME`. `assets/` is the
+exception and holds the screenshots above.
 
 | Path | Contents |
 |---|---|
@@ -72,24 +71,23 @@ the screenshots above.
 | `local/.local/bin/pick-fuzzel` | wrapper every picker goes through |
 | `systemd/`, `xdg-portal/`, `pipewire/` | user units, portal and pipewire config |
 
-Only text that would be identical on a freshly installed machine is tracked.
-Machine-specific overrides, credentials, generated caches, editor configs and
-media files stay out. `btop.conf` is tracked with `save_config_on_exit = false`
-because btop would otherwise write detected hardware into it on exit, so use
-`Ctrl+S` inside btop if you want a change to stick.
+Overrides, credentials, generated caches, editor configs and media files are not
+tracked. `btop.conf` needs one caveat: it ships with
+`save_config_on_exit = false`, because btop writes detected hardware into that
+file when it quits. Press `Ctrl+S` inside btop to keep a change.
 
 ## Local files
 
-Git-ignored files that load last. `install.sh` creates none of them, so write the
-ones you need:
+These are git-ignored and load after the tracked files. `install.sh` does not
+create them, so add the ones you need:
 
 - `~/.config/sway/host.conf` for monitors, workspaces and input devices, starting
   from `sway/.config/sway/host.conf.example`
 - `~/.config/fish/config.local.fish`
 - `~/.gitconfig.local`, which `git/.config/git/config` includes
 
-Credentials belong in `~/.config/fish/conf.d/secrets.fish`, also git-ignored.
-Nothing tracked here is a secret, which is why the repo is public.
+Credentials go in `~/.config/fish/conf.d/secrets.fish`, also ignored. Nothing
+tracked here is a secret, which is why the repo stays public.
 
 ## Uninstall
 
@@ -101,22 +99,23 @@ for pkg in local brave btop fastfetch fish fontconfig foot fuzzel git gtk mpv \
 done
 ```
 
-`stow -D` removes only the links that point into this repo. Files of your own
-stay, and `~/.cache/wal` is left alone.
+`stow -D` only removes the links that point into this repo. Your own files stay,
+and `~/.cache/wal` is untouched.
 
 ## Troubleshooting
 
 - Bar and borders stay grey after a theme change: `~/.cache/wal/colors-sway` was
-  not generated, run `wallpaper.sh -R`, or `wallpaper.sh -i <image>` when there
-  is no cached session yet.
+  not generated. Run `wallpaper.sh -R`, or `wallpaper.sh -i <image>` if there is
+  no cached session yet.
 - Every `wal` run fails after editing `wal/`: a template symlink points at a
-  deleted file, run `find ~/.config/wal/templates -xtype l -delete`.
+  deleted file. Run `find ~/.config/wal/templates -xtype l -delete`.
 - Colours are wrong after a pywal16 upgrade: `wal -c` clears the cache, then
   apply a wallpaper again.
 - `foot` or `fuzzel` complain about a missing include: there is no palette on
   this machine yet.
 - Sway will not start: `sway -C` names the offending line.
-- External brightness does nothing: the monitor has no DDC/CI, check `ddcutil detect`.
+- External brightness does nothing: the monitor has no DDC/CI. Check
+  `ddcutil detect`.
 
 ## License
 
