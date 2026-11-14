@@ -58,10 +58,19 @@ else
 fi
 echo "$level" >"$cache"
 
-# The write is slow and the OSD must not wait for it. If it fails, drop the
-# cached level so the next press re-reads the monitor instead of trusting a
-# value that never landed.
-(ddcutil --sleep-multiplier=0.5 setvcp 10 "$level" >/dev/null 2>&1 || rm -f "$cache") &
+# The write is slow and the OSD must not wait for it. Parallel writers have no
+# ordering, so a slow older write can land last and leave the panel on a level
+# the cache already moved past. Keep one writer alive at a time and let it push
+# whatever the newest cached value is. If a write fails, drop the cache so the
+# next press re-reads the monitor instead of trusting a value that never landed.
+(
+  flock -n 9 || exit 0
+  while :; do
+    want=$(cat "$cache" 2>/dev/null) || break
+    ddcutil --sleep-multiplier=0.5 setvcp 10 "$want" >/dev/null 2>&1 || rm -f "$cache"
+    [ "$(cat "$cache" 2>/dev/null)" = "$want" ] && break
+  done
+) 9>>"$cache.lock" &
 
 swayosd-client --custom-progress="$(awk -v v="$level" 'BEGIN { printf "%.2f", v / 100 }')" \
   --custom-icon=display-brightness-symbolic
