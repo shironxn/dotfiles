@@ -15,7 +15,7 @@ the bar, borders, terminal and GTK apps read their colours from it.
 sudo pacman -S sway swaybg swaylock swayosd foot fuzzel fish starship tmux \
   thunar mako libnotify wl-clipboard cliphist grim slurp wf-recorder brightnessctl \
   playerctl pipewire wireplumber networkmanager jq imagemagick ddcutil \
-  papirus-icon-theme ttf-jetbrains-mono-nerd polkit-gnome mpv \
+  papirus-icon-theme ttf-jetbrains-mono-nerd polkit-gnome mpv mpv-mpris \
   ffmpegthumbnailer xdg-desktop-portal-wlr stow eza bat fastfetch \
   adw-gtk-theme pacman-contrib btop neovim
 yay -S python-pywal16
