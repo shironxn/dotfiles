@@ -3,8 +3,9 @@ Description=tmux default session (detached)
 Documentation=man:tmux(1)
 
 [Service]
-Type=forking
-ExecStart=/usr/bin/tmux new-session -d
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'exec /usr/bin/tmux has-session 2>/dev/null || exec /usr/bin/tmux new-session -d'
 
 ExecStop=/usr/bin/tmux kill-server
 KillMode=control-group
