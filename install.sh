@@ -39,6 +39,18 @@ mkdir -p "$HOME/.config" "$HOME/.local/bin" \
 echo "==> setting script permissions"
 chmod +x bin/.local/bin/pick-fuzzel sway/.config/sway/scripts/*.sh
 
+echo "==> clearing paths stow cannot link over"
+# A first login already creates these two files (xdg-utils and xdg-user-dirs
+# write them), and stow aborts the whole package rather than replace a plain
+# file. Keep the original next to the new symlink instead of deleting it.
+for conflict in \
+    "$HOME/.config/mimeapps.list" \
+    "$HOME/.config/user-dirs.dirs"; do
+    [ -e "$conflict" ] && [ ! -L "$conflict" ] || continue
+    mv -- "$conflict" "$conflict.pre-dotfiles"
+    echo "  -> kept the old $(basename "$conflict") as $conflict.pre-dotfiles"
+done
+
 echo "==> stowing"
 # --no-folding keeps stow from replacing whole directories with symlinks. With
 # folding, anything a program writes at runtime lands inside this repo instead

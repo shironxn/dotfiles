@@ -130,9 +130,9 @@ yourself stay, and `~/.cache/wal` is left alone.
 
 | Symptom | Fix |
 |---|---|
-| Borders and bar stay grey after a theme change | `~/.cache/wal/colors-sway` was not regenerated: run `wallpaper.sh -R` |
+| Borders and bar stay grey after a theme change | `~/.cache/wal/colors-sway` was not regenerated: run `wallpaper.sh -R`, or `wallpaper.sh -i <image>` when there is no cached session yet |
 | Every `wal` run fails after editing `wal/` | a template symlink points at a deleted file: `find ~/.config/wal/templates -xtype l -delete` |
-| Colours are wrong after a pywal16 upgrade | `wal -c` clears the cache, then run `wallpaper.sh -R` |
+| Colours are wrong after a pywal16 upgrade | `wal -c` clears the cache, then re-apply a wallpaper with `wallpaper.sh -i <image>` |
 | `foot` or `fuzzel` print `include ...: No such file` | no palette yet on this machine; generate one |
 | Sway refuses to start | `sway -C` validates the config and names the offending line |
 | External brightness does nothing | the monitor has no DDC/CI; `ddcutil detect` shows whether it is reachable |

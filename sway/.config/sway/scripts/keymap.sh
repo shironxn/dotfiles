@@ -89,6 +89,7 @@ function tidy(cmd,   c) {
   sub(/^[ \t]*bindsym +/, "", line)
   sub(/^--locked +/, "", line)
   i = index(line, " ")
+  if (i == 0) next
   combo = substr(line, 1, i - 1)
   cmd = substr(line, i + 1)
   gsub(/\$mod/, "Super", combo)
