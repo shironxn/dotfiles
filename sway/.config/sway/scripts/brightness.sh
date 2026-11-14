@@ -31,8 +31,9 @@ if ! command -v ddcutil >/dev/null; then
   exit 1
 fi
 
-# Reading over I2C takes ~0.5s, so cache the last known level per output.
-cache="${XDG_RUNTIME_DIR:-/tmp}/sway/brightness-$output"
+# Reading over I2C takes ~0.5s, so cache the last known level per output. The
+# fallback is per-uid: a shared /tmp/sway could be pre-created as a symlink.
+cache="${XDG_RUNTIME_DIR:-/tmp}/sway-$(id -u)/brightness-$output"
 mkdir -p "${cache%/*}"
 
 read_level() {

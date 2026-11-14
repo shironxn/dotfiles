@@ -2,7 +2,9 @@
 # Sway bar status line: [REC] │ [MEDIA] │ [HARDWARE] │ [PERIPHERALS] │ [CLOCK]
 set -u # -e omitted: the loop must survive failed probes
 
-RT="${XDG_RUNTIME_DIR:-/tmp}/sway"
+# Fallback is per-uid: a shared /tmp/sway could be pre-created as a symlink by
+# another user, and every written path would follow it.
+RT="${XDG_RUNTIME_DIR:-/tmp}/sway-$(id -u)"
 mkdir -p "$RT"
 UPDATES_CACHE="$RT/updates"
 

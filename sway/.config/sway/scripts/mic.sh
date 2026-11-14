@@ -3,7 +3,9 @@
 # snd-ctl-led, so the LED follows mute state without extra wiring.
 set -eu
 
-RT="${XDG_RUNTIME_DIR:-/tmp}/sway"
+# Fallback is per-uid: a shared /tmp/sway could be pre-created as a symlink by
+# another user, and every written path would follow it.
+RT="${XDG_RUNTIME_DIR:-/tmp}/sway-$(id -u)"
 mkdir -p "$RT"
 
 if pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null | grep -qi 'yes'; then
