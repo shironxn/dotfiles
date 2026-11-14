@@ -5,9 +5,11 @@ prompt="${1:-}"
 [ $# -gt 0 ] && shift
 
 # Pressing the same shortcut twice closes the picker; a different one replaces
-# whatever is open instead of stacking a second window behind it.
+# whatever is open instead of stacking a second window behind it. The prompt is
+# matched as an extended regex, so escape everything that is not alphanumeric.
 if pgrep -x fuzzel >/dev/null 2>&1; then
-  if [ -n "$prompt" ] && pkill -f "fuzzel.*-p +$prompt" 2>/dev/null; then
+  esc=$(printf '%s' "$prompt" | sed 's/[^A-Za-z0-9 ]/\\&/g')
+  if [ -n "$prompt" ] && pkill -f "fuzzel.*-p +$esc" 2>/dev/null; then
     exit 0
   fi
   pkill -x fuzzel 2>/dev/null || true
