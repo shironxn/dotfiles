@@ -7,7 +7,7 @@ choice=$(printf 'Logout\0icon\037system-log-out\nSuspend\0icon\037system-suspend
 
 case "$choice" in
 Logout) swaymsg exit ;;
-Suspend) systemctl suspend ;;
+Suspend) systemctl suspend-then-hibernate ;;
 Reboot) systemctl reboot ;;
 Shutdown) systemctl poweroff ;;
 Lock) swaylock ;;
