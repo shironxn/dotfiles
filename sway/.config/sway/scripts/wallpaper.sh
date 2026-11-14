@@ -25,13 +25,10 @@ notify_error() {
 }
 
 run_wal() {
-  # A template symlink left behind by a deleted repo file makes wal crash on
-  # every export, so sweep those first.
+  # A template symlink left by a deleted repo file makes wal crash on export.
   find "$CONF/wal/templates" -xtype l -delete 2>/dev/null || true
-  # -n: pywal must not spawn its own swaybg. sway owns the wallpaper through the
-  #     `output * bg` rule and a second swaybg races it for the screen.
-  # -e: pywal must not run `swaymsg reload`. That reload re-runs autostart.conf,
-  #     which calls this script again, which calls wal again.
+  # -n: sway owns the wallpaper, a second swaybg would race it for the screen.
+  # -e: a reload re-runs autostart.conf, which calls this script again.
   if [ -n "${1:-}" ]; then
     timeout 120 wal -n -e -i "$1" 2>/dev/null ||
       notify_error "pywal failed on $(basename "$1")"
@@ -42,8 +39,7 @@ run_wal() {
 }
 
 link_colours() {
-  # pywal only writes into ~/.cache/wal; the target dirs come from stow, and
-  # swayosd never creates its own.
+  # The target dirs come from stow; swayosd never creates its own.
   mkdir -p "$CONF/swayosd"
   for pair in \
     "colors-mako:$CONF/mako/config" \
@@ -57,14 +53,13 @@ link_colours() {
 }
 
 restart_swayosd() {
-  # The daemon outlives this script, so it must not inherit the lock fd: an
-  # inherited fd 9 keeps the lock held forever and stalls every later click.
+  # The daemon outlives this script: an inherited fd 9 would hold the lock
+  # forever and stall every later click.
   killall -q -w swayosd-server 2>/dev/null || true
   nohup swayosd-server --style "$CONF/swayosd/style.css" >/dev/null 2>&1 9>&- &
 }
 
 paint() {
-  # $1 = image, empty to reuse whatever pywal recorded in $WAL/wal.
   image=${1:-$(cat "$WAL/wal" 2>/dev/null || true)}
   [ -n "$image" ] || return 0
   ln -sf "$image" "$WAL/bg"
@@ -72,8 +67,8 @@ paint() {
 }
 
 blur_lock() {
-  # Detached, because the render costs about a second. swaylock's config is only
-  # patched once the image exists, so a failure cannot leave a dangling image=.
+  # Detached: the render costs about a second, and swaylock's config is only
+  # patched once the image exists.
   image=$(cat "$WAL/wal" 2>/dev/null || true)
   [ -n "$image" ] || return 0
   res=$(swaymsg -t get_outputs 2>/dev/null | jq -r '
@@ -92,8 +87,7 @@ blur_lock() {
 
 sway_colours() {
   [ -f "$WAL/colors-sway" ] || return 0
-  # Only the generated `set $name #rrggbb` pairs reach eval, and the awk filter
-  # pins both sides of the assignment, so nothing else can be spliced in.
+  # The awk filter pins both sides of the assignment, so nothing else is evaled.
   eval "$(awk '$1 == "set" && $2 ~ /^\$[a-z0-9]+$/ && $3 ~ /^#[0-9a-fA-F]{6}$/ {
     sub(/^\$/, "", $2); printf "%s=%s\n", $2, $3 }' "$WAL/colors-sway")"
 
@@ -106,15 +100,13 @@ sway_colours() {
   c7=${color7:-#ffffff}
   c8=${color8:-#333333}
 
-  # Border colours over IPC. `swaymsg reload` would re-run autostart.conf at
-  # about 1.7s; these round-trips cost about 15ms together.
+  # Borders over IPC: `swaymsg reload` would re-run autostart.conf at ~1.7s.
   swaymsg "client.focused $c4 $c4 $fg $c4 $c6; \
 client.focused_inactive $c8 $c8 $fg $c8 $c8; \
 client.unfocused $c0 $c0 $fg $c0 $c0; \
 client.urgent $c1 $c1 $fg $c1 $c1" >/dev/null 2>&1 || true
 
-  # The bar reads its palette from bar.conf, which is only re-parsed on reload,
-  # so push the same values directly. One bar is assumed.
+  # The bar only re-reads bar.conf on reload, so push the values directly.
   bar=$(swaymsg -t get_bar_config 2>/dev/null |
     jq -r 'if type == "array" then .[0] else . end' 2>/dev/null || true)
   case "$bar" in
@@ -176,31 +168,26 @@ fi
 }
 target=$(readlink -f "$arg")
 
-# swaymsg re-joins argv and parses the result as a Sway command, so a filename
-# holding a command separator would be executed instead of painted.
+# swaymsg re-parses its argv as a Sway command, so a `;` would be executed.
 if printf '%s' "$target" | grep -q '[;"[:cntrl:]]'; then
   notify_error "filename holds ; \" or a control character: $(basename "$target")"
   exit 1
 fi
 
-# Append is atomic under PIPE_BUF, so concurrent clicks cannot interleave and the
-# append order is the click order. flock is deliberately not used here: it hands
-# the lock out in no particular order, so an older click could win. Only the
-# newest line is ever read, so trim instead of growing forever.
+# Append is atomic under PIPE_BUF, so append order is click order; flock would
+# hand the lock out in no particular order and an older click could win.
 if [ -f "$REQUESTS" ] && [ "$(wc -l <"$REQUESTS")" -gt 64 ]; then
   printf '%s\n' "$(tail -n 1 "$REQUESTS")" >"$REQUESTS.tmp" &&
     mv -f "$REQUESTS.tmp" "$REQUESTS"
 fi
 printf '%s\n' "$target" >>"$REQUESTS"
 
-# Paint first, but only while this click is still the newest one, so the preview
-# never disagrees with what pywal ends up recording.
+# Paint only while this click is still the newest, so preview matches pywal.
 if [ "$(tail -n 1 "$REQUESTS" 2>/dev/null || true)" = "$target" ]; then
   swaymsg output '*' bg "$target" fill >/dev/null 2>&1 || true
 fi
 
-# Coalescing worker: one at a time, always draining the newest request, so a
-# burst of clicks collapses into the last one instead of queueing every theme.
+# One worker, always draining the newest request, so a burst collapses to the last.
 (
   flock -w 60 9 || exit 0
   while :; do
@@ -211,8 +198,7 @@ fi
     printf '%s\n' "$next" >"$APPLIED"
   done
 
-  # Reconcile: a click that landed mid-flight may have painted the screen
-  # without pywal catching up, so point the symlink at what was last applied.
+  # A click that landed mid-flight may have painted without pywal catching up.
   settled=$(cat "$APPLIED" 2>/dev/null || true)
   if [ -n "$settled" ] && [ "$(readlink "$WAL/bg" 2>/dev/null || true)" != "$settled" ]; then
     ln -sf "$settled" "$WAL/bg"

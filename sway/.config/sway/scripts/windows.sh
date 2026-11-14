@@ -13,8 +13,7 @@ windows=$(swaymsg -t get_tree | jq -r '
 con_id=$(printf '%s\n' "$windows" |
   pick-fuzzel " switch to " -w 46 -l 10 --with-nth=1 --accept-nth=2) || exit 0
 
-# fuzzel only ever echoes the tab-separated id column, but a rejected config or
-# a future fuzzel change must not be able to reach swaymsg as extra arguments.
+# The picker echoes only the id column; a stray value must not reach swaymsg.
 case "$con_id" in '' | *[!0-9]*) exit 0 ;; esac
 
 swaymsg "[con_id=$con_id] focus"

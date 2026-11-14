@@ -1,4 +1,3 @@
-# Mako notification daemon: pywal theme
 font=JetBrainsMono Nerd Font 13
 background-color={background}
 text-color={foreground}

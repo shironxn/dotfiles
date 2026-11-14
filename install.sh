@@ -30,8 +30,7 @@ packages=(
 )
 
 echo "==> preparing directories"
-# Wallpapers is where Super+Shift+w opens and where wallpaper.sh looks a bare
-# filename up, so it has to exist before the first theme is generated.
+# Where Super+Shift+w opens and where wallpaper.sh resolves a bare filename.
 mkdir -p "$HOME/.config" "$HOME/.local/bin" \
     "$HOME/pictures/screenshots" "$HOME/pictures/wallpapers" \
     "$HOME/videos/recordings"
@@ -40,9 +39,8 @@ echo "==> setting script permissions"
 chmod +x local/.local/bin/pick-fuzzel sway/.config/sway/scripts/*.sh
 
 echo "==> clearing paths stow cannot link over"
-# A first login already creates these two files (xdg-utils and xdg-user-dirs
-# write them), and stow aborts the whole package rather than replace a plain
-# file. Keep the original next to the new symlink instead of deleting it.
+# xdg-utils and xdg-user-dirs create these on first login, and stow aborts the
+# package instead of replacing a plain file. The original is kept beside it.
 for conflict in \
     "$HOME/.config/mimeapps.list" \
     "$HOME/.config/user-dirs.dirs"; do
@@ -52,9 +50,7 @@ for conflict in \
 done
 
 echo "==> stowing"
-# --no-folding keeps stow from replacing whole directories with symlinks. With
-# folding, anything a program writes at runtime lands inside this repo instead
-# of $HOME, so the working tree picks up machine state.
+# --no-folding: with folding, runtime writes land inside this repo, not $HOME.
 for pkg in "${packages[@]}"; do
     echo "  -> $pkg"
     stow -R --no-folding -t "$HOME" "$pkg" ||
@@ -67,16 +63,13 @@ if command -v sway >/dev/null 2>&1; then
         die "sway rejected the config; run 'sway -C' to see the offending line"
 fi
 
-# Thunar rewrites uca.xml whenever an action is edited, replacing a stow
-# symlink with a plain file, so it is copied rather than linked. Re-run this
-# script after changing thunar/.config/Thunar/uca.xml.
+# Thunar rewrites uca.xml when an action is edited, replacing the symlink with a
+# plain file, so it is copied. Re-run after changing the repo's copy.
 mkdir -p "$HOME/.config/Thunar"
 install -m 600 thunar/.config/Thunar/uca.xml "$HOME/.config/Thunar/uca.xml"
 
-# Thunar ships its own "Set as wallpaper" action that only works on XFCE and
-# GNOME. Under Sway it fails silently, and it sits next to the custom action
-# below with an almost identical label, so image right-clicks look broken.
-# Disable it once; a Thunar upgrade puts the file back and this is a no-op then.
+# Thunar's own "Set as wallpaper" action fails silently under Sway and sits next
+# to the custom one with a near-identical label. A Thunar upgrade restores it.
 wallpaper_plugin=/usr/lib/thunarx-3/thunar-wallpaper-plugin.so
 if [ -f "$wallpaper_plugin" ] && [ -w "$(dirname "$wallpaper_plugin")" ]; then
     mv "$wallpaper_plugin" "$wallpaper_plugin.disabled"

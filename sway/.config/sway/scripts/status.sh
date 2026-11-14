@@ -2,8 +2,7 @@
 # Sway bar status line: [REC] │ [MEDIA] │ [HARDWARE] │ [PERIPHERALS] │ [CLOCK]
 set -u # -e omitted: the loop must survive failed probes
 
-# Per-uid fallback: a shared /tmp/sway can be a symlink planted by another user,
-# and every write below would follow it.
+# Per-uid fallback: a shared /tmp/sway could be a symlink planted by a user.
 RT="${XDG_RUNTIME_DIR:-/tmp}/sway-$(id -u)"
 UPDATES_CACHE="$RT/updates"
 mkdir -p "$RT"
@@ -27,8 +26,7 @@ cached() {
   printf '%s' "$value"
 }
 
-# join <separator> <part...>: empty parts drop out, so a missing probe never
-# leaves a dangling separator on the bar.
+# join <separator> <part...>: empty parts drop out, leaving no dangling separator.
 join() {
   sep=$1
   out=""
@@ -87,8 +85,7 @@ mic_icon() {
   pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null | grep -qi 'yes' && printf '󰍭'
 }
 
-# WiFi, volume, muted mic, battery and backlight in one cached string: they are
-# cheap, and one cache entry beats four.
+# WiFi, volume, mic, battery, backlight: one cache entry beats four.
 peripherals() {
   join " · " "$(wifi_icon)" "$(volume)" "$(mic_icon)" "$(battery)" "$(kbd_flag)"
 }
@@ -123,8 +120,8 @@ kbd_flag() {
   done
 }
 
-# Package updates cost a full repo query: run detached, cache for an hour, and
-# re-run early whenever pacman's own databases change.
+# A repo query is expensive: run detached, cache an hour, re-run when pacman's
+# databases change.
 refresh_updates() {
   [ -f /var/lib/pacman/db.lck ] && return 0
   pacman_time=$(stat -c %Y /var/lib/pacman/local /var/lib/pacman/sync 2>/dev/null |
@@ -151,8 +148,8 @@ while :; do
   pid=$(pgrep -x wf-recorder | head -n1 || true)
   if [ -n "$pid" ]; then
     sleep_for=1
-    # Age comes from the process itself. A start-time file breaks the moment the
-    # bar and record.sh disagree on a path, and the counter sticks at 00:00.
+    # Age comes from the process: a start-time file leaves the counter at 00:00
+    # whenever the bar and record.sh disagree on a path.
     elapsed=$(ps -o etimes= -p "$pid" 2>/dev/null | tr -d ' ')
     case "$elapsed" in '' | *[!0-9]*) elapsed=0 ;; esac
     if [ "$elapsed" -ge 3600 ]; then

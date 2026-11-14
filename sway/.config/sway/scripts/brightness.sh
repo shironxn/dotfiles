@@ -58,11 +58,9 @@ else
 fi
 echo "$level" >"$cache"
 
-# The write is slow and the OSD must not wait for it. Parallel writers have no
-# ordering, so a slow older write can land last and leave the panel on a level
-# the cache already moved past. Keep one writer alive at a time and let it push
-# whatever the newest cached value is. If a write fails, drop the cache so the
-# next press re-reads the monitor instead of trusting a value that never landed.
+# Parallel ddcutil writers have no ordering, so a slow older write can land last
+# and leave the panel behind the cache. One writer pushes the newest value; a
+# failed write drops the cache so the next press re-reads the monitor.
 (
   flock -n 9 || exit 0
   while :; do

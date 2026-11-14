@@ -10,13 +10,11 @@ $rust\
 $golang\
 \n$character"""
 
-# ── Directory ──
 [directory]
 truncation_length = 3
 truncate_to_repo = true
 style = "bold #e7e3df"
 
-# ── Git ──
 [git_branch]
 format = ' [$symbol$branch]($style)'
 style = "#77A3AD"
@@ -34,7 +32,6 @@ stashed = " "
 deleted = " ✕"
 renamed = " ➜"
 
-# ── Language versions (auto-detect) ──
 [nodejs]
 format = ' via [ v$version](bold #97C9CD)'
 
@@ -47,18 +44,15 @@ format = ' via [ v$version](bold #97C9CD)'
 [golang]
 format = ' via [ v$version](bold #97C9CD)'
 
-# ── Command duration ──
 [cmd_duration]
 format = 'took [$duration](italic #a19e9c)'
 min_time = 2000
 show_milliseconds = false
 
-# ── Prompt character ──
 [character]
 success_symbol = "[❯](bold #CEBFB5)"
 error_symbol = "[❯](bold #EFB8A2)"
 vicmd_symbol = "[❮](bold #77A3AD)"
 
-# ── Fill (push secondary info to right) ──
 [fill]
 symbol = " "
