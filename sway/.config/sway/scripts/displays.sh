@@ -1,6 +1,6 @@
 #!/bin/sh
 # Focus the next active output, or move the focused container there.
-#   output.sh focus|move
+#   displays.sh focus|move
 set -eu
 
 action="${1:-focus}"

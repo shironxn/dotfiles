@@ -25,8 +25,8 @@ if ((${#missing[@]})); then
 fi
 
 packages=(
-    bin brave btop fastfetch fish fontconfig foot fuzzel git gtk mpv
-    pipewire portal starship sway systemd thunar tmux wal xdg
+    local brave btop fastfetch fish fontconfig foot fuzzel git gtk mpv
+    pipewire starship sway systemd thunar tmux wal xdg xdg-portal
 )
 
 echo "==> preparing directories"
@@ -37,7 +37,7 @@ mkdir -p "$HOME/.config" "$HOME/.local/bin" \
     "$HOME/videos/recordings"
 
 echo "==> setting script permissions"
-chmod +x bin/.local/bin/pick-fuzzel sway/.config/sway/scripts/*.sh
+chmod +x local/.local/bin/pick-fuzzel sway/.config/sway/scripts/*.sh
 
 echo "==> clearing paths stow cannot link over"
 # A first login already creates these two files (xdg-utils and xdg-user-dirs
