@@ -46,6 +46,9 @@ cpu_temp() {
 }
 
 now_playing() {
+  # Metadata outlives playback, so a stopped player would keep its last track
+  # on the bar indefinitely.
+  [ "$(timeout 1.5 playerctl status 2>/dev/null)" = "Playing" ] || return 0
   timeout 1.5 playerctl metadata --format '󰎆 {{artist}} - {{title}}' 2>/dev/null | cut -c1-42
 }
 
