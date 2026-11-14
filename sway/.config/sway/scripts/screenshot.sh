@@ -9,7 +9,12 @@ file="$dir/$(date +'%Y-%m-%d_%H-%M-%S_%3N')"
 slurp_args=""
 if [ -f "$HOME/.cache/wal/colors" ]; then
   accent=$(sed -n '5p' "$HOME/.cache/wal/colors")
-  slurp_args="-b #00000088 -c ${accent}ff -s ${accent}22 -w 2"
+  # A malformed palette line would reach slurp as extra positional arguments.
+  case "$accent" in
+  '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
+    slurp_args="-b #00000088 -c ${accent}ff -s ${accent}22 -w 2"
+    ;;
+  esac
 fi
 
 choice=$(printf 'Area\0icon\037edit-select\nWindow\0icon\037window\nDisplay\0icon\037video-display' |
