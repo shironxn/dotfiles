@@ -77,12 +77,14 @@ leave it out.
 
 ## Overrides
 
-Three git-ignored files load last for machine-specific settings:
+Git-ignored files that load last for machine-specific settings. `install.sh`
+creates none of them, so make the ones you actually need:
 
 - `~/.config/sway/host.conf` (monitors, workspaces, input devices; see
   `sway/.config/sway/host.conf.example`)
 - `~/.config/fish/config.local.fish`
-- `~/.gitconfig.local`
+- `~/.gitconfig.local` (included by `git/.config/git/config`; git ignores the
+  include silently while the file is absent)
 
 Credentials go in `~/.config/fish/conf.d/secrets.fish`, which is git-ignored.
 Nothing tracked here is secret, so the repo stays public.
