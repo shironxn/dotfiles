@@ -1,5 +1,3 @@
-# Fish shell configuration
-
 set -g fish_greeting
 
 if test -f ~/.cache/wal/colors.fish
