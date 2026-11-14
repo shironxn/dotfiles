@@ -24,6 +24,9 @@ __pycache__/
 # Machine-local fish variables & overrides
 fish/.config/fish/fish_variables
 fish/.config/fish/config.local.fish
+# Written by fisher at runtime
+fish/.config/fish/functions/
+fish/.config/fish/completions/
 
 # Local secrets (API keys, personal tokens)
 fish/.config/fish/conf.d/secrets.fish

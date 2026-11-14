@@ -40,11 +40,20 @@ echo "==> setting script permissions"
 chmod +x bin/.local/bin/pick-fuzzel sway/.config/sway/scripts/*.sh
 
 echo "==> stowing"
+# --no-folding keeps stow from replacing whole directories with symlinks. With
+# folding, anything a program writes at runtime lands inside this repo instead
+# of $HOME, so the working tree picks up machine state.
 for pkg in "${packages[@]}"; do
     echo "  -> $pkg"
-    stow -R -t "$HOME" "$pkg" ||
+    stow -R --no-folding -t "$HOME" "$pkg" ||
         die "$pkg conflicts with an existing file above; move it aside and retry"
 done
+
+echo "==> validating sway config"
+if command -v sway >/dev/null 2>&1; then
+    sway -C >/dev/null 2>&1 ||
+        die "sway rejected the config; run 'sway -C' to see the offending line"
+fi
 
 # Thunar rewrites uca.xml whenever an action is edited, replacing a stow
 # symlink with a plain file, so it is copied rather than linked. Re-run this
