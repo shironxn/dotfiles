@@ -30,8 +30,11 @@ packages=(
 )
 
 echo "==> preparing directories"
+# Wallpapers is where Super+Shift+w opens and where wallpaper.sh looks a bare
+# filename up, so it has to exist before the first theme is generated.
 mkdir -p "$HOME/.config" "$HOME/.local/bin" \
-    "$HOME/pictures/screenshots" "$HOME/videos/recordings"
+    "$HOME/pictures/screenshots" "$HOME/pictures/wallpapers" \
+    "$HOME/videos/recordings"
 
 echo "==> setting script permissions"
 chmod +x bin/.local/bin/pick-fuzzel sway/.config/sway/scripts/*.sh
@@ -66,7 +69,7 @@ echo
 echo "==> next steps"
 if [ ! -f "$HOME/.cache/wal/colors-sway" ]; then
     echo "  * no palette yet. Pick a wallpaper (Super+Shift+w) or run:"
-    echo "      ~/.config/sway/scripts/wallpaper.sh -i /path/to/wallpaper.jpg"
+    echo "      ~/.config/sway/scripts/wallpaper.sh -i ~/pictures/wallpapers/<image>"
 fi
 if ! git config --global user.email >/dev/null 2>&1; then
     echo "  * set your git identity: git config --global user.name/user.email"
