@@ -53,8 +53,12 @@ cpu_temp() {
 
 now_playing() {
   # Metadata outlives playback, so a stopped player would keep its last track.
-  [ "$(timeout 1.5 playerctl status 2>/dev/null)" = "Playing" ] || return 0
-  timeout 1.5 playerctl metadata --format '󰎆 {{artist}} - {{title}}' 2>/dev/null | cut -c1-42
+  # With several players open the default one can be idle while another plays.
+  for p in $(timeout 1.5 playerctl -l 2>/dev/null); do
+    [ "$(timeout 1.5 playerctl -p "$p" status 2>/dev/null)" = "Playing" ] || continue
+    timeout 1.5 playerctl -p "$p" metadata --format '󰎆 {{artist}} - {{title}}' 2>/dev/null | cut -c1-42
+    return 0
+  done
 }
 
 wifi_icon() {
