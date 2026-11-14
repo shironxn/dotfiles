@@ -2,27 +2,22 @@
 # Sway bar status line: [REC] │ [MEDIA] │ [HARDWARE] │ [PERIPHERALS] │ [CLOCK]
 set -u # -e omitted: the loop must survive failed probes
 
-# Fallback is per-uid: a shared /tmp/sway could be pre-created as a symlink by
-# another user, and every written path would follow it.
+# Per-uid fallback: a shared /tmp/sway can be a symlink planted by another user,
+# and every write below would follow it.
 RT="${XDG_RUNTIME_DIR:-/tmp}/sway-$(id -u)"
-mkdir -p "$RT"
 UPDATES_CACHE="$RT/updates"
-
-# fresh <file> <seconds>
-fresh() {
-  [ -f "$1" ] || return 1
-  [ "$(($(date +%s) - $(stat -c %Y "$1" 2>/dev/null || echo 0)))" -lt "$2" ]
-}
+mkdir -p "$RT"
 
 # put <file> <value>: rename is atomic, so a reader never sees a partial write.
 put() {
   printf '%s\n' "$2" >"$1.$$" && mv -f "$1.$$" "$1"
 }
 
-# cached <file> <seconds> <command...>: print the cache, or recompute and store it.
+# cached <file> <seconds> <command...>: serve the cache, or recompute and store.
 cached() {
   file=$1
-  if fresh "$file" "$2"; then
+  if [ -f "$file" ] &&
+    [ "$(($(date +%s) - $(stat -c %Y "$file" 2>/dev/null || echo 0)))" -lt "$2" ]; then
     cat "$file"
     return 0
   fi
@@ -32,22 +27,34 @@ cached() {
   printf '%s' "$value"
 }
 
+# join <separator> <part...>: empty parts drop out, so a missing probe never
+# leaves a dangling separator on the bar.
+join() {
+  sep=$1
+  out=""
+  shift
+  for part in "$@"; do
+    [ -n "$part" ] || continue
+    out=${out:+$out$sep}$part
+  done
+  printf '%s' "$out"
+}
+
 cpu_temp() {
   raw=""
-  for z in /sys/class/thermal/thermal_zone*; do
-    case "$(cat "$z/type" 2>/dev/null)" in
+  for zone in /sys/class/thermal/thermal_zone*; do
+    case "$(cat "$zone/type" 2>/dev/null)" in
     x86_pkg_temp | cpu* | k10temp | coretemp)
-      raw=$(cat "$z/temp" 2>/dev/null) && [ -n "$raw" ] && break
+      raw=$(cat "$zone/temp" 2>/dev/null) && [ -n "$raw" ] && break
       ;;
     esac
   done
-  [ -n "$raw" ] || raw=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)
+  raw=${raw:-$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)}
   printf '󰔏 %s°C' "$((${raw:-0} / 1000))"
 }
 
 now_playing() {
-  # Metadata outlives playback, so a stopped player would keep its last track
-  # on the bar indefinitely.
+  # Metadata outlives playback, so a stopped player would keep its last track.
   [ "$(timeout 1.5 playerctl status 2>/dev/null)" = "Playing" ] || return 0
   timeout 1.5 playerctl metadata --format '󰎆 {{artist}} - {{title}}' 2>/dev/null | cut -c1-42
 }
@@ -61,13 +68,11 @@ wifi_icon() {
 }
 
 volume() {
-  if pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q 'Mute: yes'; then
-    printf '󰖁'
-    return 0
-  fi
-  level=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -o '[0-9]*%' | head -n1 | tr -d '%')
+  level=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null |
+    grep -o '[0-9]*%' | head -n1 | tr -d '%')
   level=${level:-0}
-  if [ "$level" -eq 0 ]; then
+  if [ "$level" -eq 0 ] ||
+    pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q 'Mute: yes'; then
     printf '󰖁'
   elif [ "$level" -lt 34 ]; then
     printf '󰕿 %s%%' "$level"
@@ -78,55 +83,55 @@ volume() {
   fi
 }
 
-mic_flag() {
-  if pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null | grep -qi 'yes'; then
-    printf 1
-  else
-    printf 0
-  fi
+mic_icon() {
+  pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null | grep -qi 'yes' && printf '󰍭'
+}
+
+# WiFi, volume, muted mic, battery and backlight in one cached string: they are
+# cheap, and one cache entry beats four.
+peripherals() {
+  join " · " "$(wifi_icon)" "$(volume)" "$(mic_icon)" "$(battery)" "$(kbd_flag)"
 }
 
 battery() {
-  for b in /sys/class/power_supply/BAT*; do
-    [ -d "$b" ] || continue
-    capacity=$(cat "$b/capacity" 2>/dev/null || echo 0)
-    if [ "$(cat "$b/status" 2>/dev/null)" = Charging ]; then
-      icon=󰂄
-    elif [ "$capacity" -ge 90 ]; then
-      icon=󰁹
-    elif [ "$capacity" -ge 70 ]; then
-      icon=󰂀
-    elif [ "$capacity" -ge 50 ]; then
-      icon=󰁾
-    elif [ "$capacity" -ge 30 ]; then
-      icon=󰁼
-    elif [ "$capacity" -ge 15 ]; then
-      icon=󰁺
-    else
+  for bat in /sys/class/power_supply/BAT*; do
+    [ -d "$bat" ] || continue
+    capacity=$(cat "$bat/capacity" 2>/dev/null || echo 0)
+    case "$(cat "$bat/status" 2>/dev/null):$capacity" in
+    Charging:*) icon=󰂄 ;;
+    *)
       icon=󰂃
-    fi
-    printf ' · %s %s%%' "$icon" "$capacity"
+      [ "$capacity" -ge 15 ] && icon=󰁺
+      [ "$capacity" -ge 30 ] && icon=󰁼
+      [ "$capacity" -ge 50 ] && icon=󰁾
+      [ "$capacity" -ge 70 ] && icon=󰂀
+      [ "$capacity" -ge 90 ] && icon=󰁹
+      ;;
+    esac
+    printf '%s %s%%' "$icon" "$capacity"
     return 0
   done
 }
 
 kbd_flag() {
-  for d in /sys/class/leds/tpacpi::kbd_backlight/brightness \
+  for led in /sys/class/leds/tpacpi::kbd_backlight/brightness \
     /sys/class/leds/*kbd*backlight*/brightness \
     /sys/class/leds/*::kbd_backlight/brightness; do
-    [ -f "$d" ] || continue
-    [ "$(cat "$d" 2>/dev/null || echo 0)" -gt 0 ] && printf ' · 󰌌'
+    [ -f "$led" ] || continue
+    [ "$(cat "$led" 2>/dev/null || echo 0)" -gt 0 ] && printf '󰌌'
     return 0
   done
 }
 
-# Package updates cost a full repo query, so they run detached with a 1h cache
-# and are refreshed early whenever pacman's own databases change.
+# Package updates cost a full repo query: run detached, cache for an hour, and
+# re-run early whenever pacman's own databases change.
 refresh_updates() {
   [ -f /var/lib/pacman/db.lck ] && return 0
-  pacman_time=$(stat -c %Y /var/lib/pacman/local /var/lib/pacman/sync 2>/dev/null | sort -nr | head -n1)
+  pacman_time=$(stat -c %Y /var/lib/pacman/local /var/lib/pacman/sync 2>/dev/null |
+    sort -nr | head -n1)
   cache_time=$(stat -c %Y "$UPDATES_CACHE" 2>/dev/null || echo 0)
-  fresh "$UPDATES_CACHE" 3600 && [ "${pacman_time:-0}" -le "${cache_time:-0}" ] && return 0
+  [ "$(($(date +%s) - cache_time))" -lt 3600 ] &&
+    [ "${pacman_time:-0}" -le "$cache_time" ] && return 0
   (
     flock -n 9 || exit 0
     out=$(checkupdates 2>/dev/null)
@@ -142,15 +147,17 @@ while :; do
   sleep_for=3
 
   rec=""
-  if pgrep -x wf-recorder >/dev/null; then
+  # Subshell-free status check: a pipeline reports head's status, not pgrep's.
+  pid=$(pgrep -x wf-recorder | head -n1 || true)
+  if [ -n "$pid" ]; then
     sleep_for=1
-    # Read the age from the process itself. A start-time file would break the
-    # moment the bar and record.sh disagree on a path, and the counter would
-    # sit at 00:00 for the whole recording.
-    elapsed=$(ps -o etimes= -p "$(pgrep -x wf-recorder | head -n1)" 2>/dev/null | tr -d ' ')
+    # Age comes from the process itself. A start-time file breaks the moment the
+    # bar and record.sh disagree on a path, and the counter sticks at 00:00.
+    elapsed=$(ps -o etimes= -p "$pid" 2>/dev/null | tr -d ' ')
     case "$elapsed" in '' | *[!0-9]*) elapsed=0 ;; esac
     if [ "$elapsed" -ge 3600 ]; then
-      rec=$(printf 'REC %d:%02d:%02d' $((elapsed / 3600)) $((elapsed / 60 % 60)) $((elapsed % 60)))
+      rec=$(printf 'REC %d:%02d:%02d' \
+        $((elapsed / 3600)) $((elapsed / 60 % 60)) $((elapsed % 60)))
     else
       rec=$(printf 'REC %02d:%02d' $((elapsed / 60)) $((elapsed % 60)))
     fi
@@ -162,28 +169,14 @@ while :; do
 
   temp=$(cached "$RT/cpu-temp" 30 cpu_temp)
   media=$(cached "$RT/nowplaying" 5 now_playing)
-  wifi=$(cached "$RT/wifi" 20 wifi_icon)
-  vol=$(cached "$RT/vol" 5 volume)
+  periph=$(cached "$RT/peripherals" 5 peripherals)
 
-  mic=""
-  if fresh "$RT/mic-mute" 3; then
-    [ "$(cat "$RT/mic-mute")" = 1 ] && mic=" · 󰍭"
-  else
-    muted=$(mic_flag)
-    put "$RT/mic-mute" "$muted"
-    [ "$muted" = 1 ] && mic=" · 󰍭"
-  fi
+  hardware=$(join " · " "$temp" \
+    "$(free -h | awk '/^Mem:/ { sub(/i$/, "", $3); printf "󰍛 %s", $3 }')")
+  [ "$updates" -gt 0 ] && hardware=$(join " · " "$hardware" "󰏗 $updates")
 
-  ram=$(free -h | awk '/^Mem:/ { sub(/i$/, "", $3); printf "󰍛 %s", $3 }')
-  hardware="${temp} · ${ram}"
-  [ "$updates" -gt 0 ] && hardware="${hardware} · 󰏗 ${updates}"
-
-  peripherals="${wifi} · ${vol}${mic}$(battery)$(kbd_flag)"
-
-  out=""
-  [ -n "$rec" ] && out="${rec}  │  "
-  [ -n "$media" ] && out="${out}${media}  │  "
-  printf '%s%s  │  %s  │  󰃭 %s\n' "$out" "$hardware" "$peripherals" "$(date +'%d %b · %H:%M')"
+  printf '%s\n' "$(join '  │  ' "$rec" "$media" "$hardware" "$periph" \
+    "󰃭 $(date +'%d %b · %H:%M')")"
 
   sleep "$sleep_for"
 done
