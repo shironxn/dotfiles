@@ -4,6 +4,18 @@
 *.swp
 *.swo
 
+# Editor & AI tool state
+.vscode/
+.idea/
+.claude/
+.cursor/
+.pi/
+
+# Logs & scratch files
+*.log
+*.bak
+*.orig
+
 # Python bytecode & cache
 __pycache__/
 *.pyc
@@ -18,3 +30,6 @@ fish/.config/fish/conf.d/secrets.fish
 
 # Machine-specific Sway configuration
 sway/.config/sway/host.conf
+
+# Anything explicitly marked machine-local
+*.local.conf
