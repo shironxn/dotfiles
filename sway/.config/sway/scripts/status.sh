@@ -141,7 +141,11 @@ while :; do
   rec=""
   if pgrep -x wf-recorder >/dev/null; then
     sleep_for=1
-    elapsed=$(($(date +%s) - $(cat "$RT/rec-start" 2>/dev/null || date +%s)))
+    # Read the age from the process itself. A start-time file would break the
+    # moment the bar and record.sh disagree on a path, and the counter would
+    # sit at 00:00 for the whole recording.
+    elapsed=$(ps -o etimes= -p "$(pgrep -x wf-recorder | head -n1)" 2>/dev/null | tr -d ' ')
+    case "$elapsed" in '' | *[!0-9]*) elapsed=0 ;; esac
     if [ "$elapsed" -ge 3600 ]; then
       rec=$(printf 'REC %d:%02d:%02d' $((elapsed / 3600)) $((elapsed / 60 % 60)) $((elapsed % 60)))
     else

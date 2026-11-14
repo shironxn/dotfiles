@@ -1,18 +1,13 @@
 #!/bin/sh
 # Toggle a screen recording with desktop audio, into ~/videos/recordings.
+# The bar reads the elapsed time from the wf-recorder process itself, so no
+# state is written here.
 set -eu
-
-# Fallback is per-uid: a shared /tmp/sway could be pre-created as a symlink by
-# another user, and every written path would follow it.
-RT="${XDG_RUNTIME_DIR:-/tmp}/sway-$(id -u)"
-mkdir -p "$RT"
-start_file="$RT/rec-start"
 
 if pgrep -x wf-recorder >/dev/null; then
   killall -INT wf-recorder
   notify-send -t 3000 -i media-record "Screen Recorder" \
     "Saved to ~/videos/recordings/"
-  # Drop the timer only once the process is gone, so the bar never shows 00:00.
   # Bound the wait: a wedged encoder must not leave the keybind hanging.
   waited=0
   while pgrep -x wf-recorder >/dev/null && [ "$waited" -lt 50 ]; do
@@ -20,7 +15,6 @@ if pgrep -x wf-recorder >/dev/null; then
     waited=$((waited + 1))
   done
   [ "$waited" -lt 50 ] || pkill -9 -x wf-recorder
-  rm -f "$start_file"
   exit 0
 fi
 
@@ -50,9 +44,6 @@ start() {
     notify-send -u critical -t 3000 -i media-record "Screen Recorder" "Recording failed"
     exit 1
   fi
-  date +%s >"$start_file"
-  notify-send -t 2500 -i media-record "Screen Recorder" \
-    "Recording started. Super+Shift+r to stop."
 }
 
 case "$choice" in
